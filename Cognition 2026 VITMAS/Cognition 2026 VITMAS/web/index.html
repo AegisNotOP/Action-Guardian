@@ -1,0 +1,1641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ActionGuardian | AI Email Safety & Verification Gateway</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+
+        /* ---- WORKFLOW BAR ---- */
+        .wf-step { display: flex; align-items: center; gap: 0; flex-shrink: 0; }
+        .wf-dot { width: 22px; height: 22px; border-radius: 50%; border: 2px solid #cbd5e1; background: #ffffff; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 700; color: #64748b; transition: all 0.2s ease; flex-shrink: 0; }
+        .wf-lbl { font-size: 10px; font-weight: 600; color: #64748b; margin-left: 0.35rem; white-space: nowrap; transition: color 0.2s ease; }
+        .wf-conn { flex: 1; min-width: 14px; max-width: 32px; height: 2px; background: #e2e8f0; margin: 0 0.35rem; border-radius: 1px; transition: background 0.2s ease; flex-shrink: 0; }
+        .wf-step.done .wf-dot { border-color: #10b981; background: #ecfdf5; color: #047857; }
+        .wf-step.done .wf-lbl { color: #047857; font-weight: 700; }
+        .wf-step.done + .wf-conn { background: #10b981; }
+        .wf-step.current .wf-dot { border-color: #6366f1; background: #eef2ff; color: #4338ca; }
+        .wf-step.current .wf-lbl { color: #4338ca; font-weight: 700; }
+        .wf-step.stale .wf-dot { border-color: #f59e0b; background: #fffbeb; color: #b45309; }
+        .wf-step.stale .wf-lbl { color: #b45309; }
+
+        /* ---- SCORE HISTORY ---- */
+        .sh-tag { font-size: 9px; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: #64748b; flex-shrink: 0; }
+        .sh-pill { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 10px; font-weight: 700; font-family: monospace; padding: 2px 7px; border-radius: 5px; border: 1px solid; white-space: nowrap; }
+        .sh-arrow { font-size: 11px; color: #94a3b8; }
+        .sh-est { opacity: 0.85; }
+        .sh-delta { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 5px; border: 1px solid; }
+        .sh-delta.better { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+        .sh-delta.worse { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+        .sh-delta.same { background: #f8fafc; border-color: #e2e8f0; color: #64748b; }
+
+        /* ---- ANNOTATED PREVIEW ---- */
+        .hi-cr { background: #fecaca; border-bottom: 2px solid #dc2626; border-radius: 2px; padding: 0 2px; cursor: pointer; }
+        .hi-hi { background: #ffedd5; border-bottom: 2px solid #ea580c; border-radius: 2px; padding: 0 2px; cursor: pointer; }
+        .hi-md { background: #fef3c7; border-bottom: 2px solid #d97706; border-radius: 2px; padding: 0 2px; cursor: pointer; }
+        .annot-key { display: flex; align-items: center; gap: 0.3rem; font-size: 10px; color: #64748b; }
+        .annot-key-swatch { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+        /* ---- COMPARISON PANEL ---- */
+        .cmp-score-pill { display: inline-flex; align-items: center; gap: 0.25rem; font-size: 9.5px; font-weight: 700; font-family: monospace; padding: 2px 6px; border-radius: 4px; border: 1px solid; }
+        .cmp-ch-item { position: relative; padding-left: 0.85rem; }
+        .cmp-ch-item::before { content: ''; position: absolute; left: 0; top: 0.5em; width: 4px; height: 4px; border-radius: 50%; background: #6366f1; }
+        .cmp-delta.better { background: #ecfdf5; border-color: #a7f3d0; color: #047857; }
+        .cmp-delta.worse { background: #fef2f2; border-color: #fecaca; color: #b91c1c; }
+        .cmp-delta.same { background: #f8fafc; border-color: #e2e8f0; color: #64748b; }
+
+        /* ---- ACCORDIONS ---- */
+        .acc-panel.open { max-height: 500px; }
+        .acc-item:hover .acc-chevron, .acc-trigger[aria-expanded="true"] .acc-chevron { transform: rotate(180deg); }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased min-h-screen selection:bg-slate-900 selection:text-white">
+
+    <!-- Top Professional Navigation Header -->
+    <header class="border-b border-slate-200 bg-white sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                    AG
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-slate-900 tracking-tight text-sm sm:text-base">ActionGuardian</span>
+                        <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">Email Gateway</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 hidden sm:block">Pre-Action Threat Simulation & Verification (VITMAS Cognition 2026)</p>
+                </div>
+            </div>
+
+            <!-- Safe Presentation Sandbox Mode & Sender Status -->
+            <div class="flex items-center space-x-3">
+                <div class="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-50 border border-emerald-200 text-xs">
+                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span class="font-bold text-emerald-800">🛡️ Presentation Sandbox</span>
+                    <label class="flex items-center gap-1.5 ml-1.5 pl-2 border-l border-emerald-200 cursor-pointer text-[11px] text-emerald-900 font-medium select-none" title="Toggle Live Gmail SMTP dispatch on demand">
+                        <input type="checkbox" id="live-smtp-toggle" onchange="toggleSendButton()" class="rounded border-emerald-300 text-emerald-700 focus:ring-emerald-600">
+                        <span>Live SMTP</span>
+                    </label>
+                </div>
+                <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+                    <span class="text-slate-400 font-medium">Sender:</span>
+                    <span id="active-sender-display" class="font-semibold text-slate-700">Loading config...</span>
+                </div>
+                <button onclick="scrollToBenchmark()" class="text-xs px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold transition shadow-sm cursor-pointer">
+                    Sample Test Cases
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Global Inline Notification Banner (Never uses alert popups) -->
+        <div id="status-banner" class="hidden p-4 rounded-xl text-xs font-medium border transition-all"></div>
+
+        <!-- Header Summary Banner -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div class="space-y-1">
+                <h1 class="text-xl font-bold text-slate-900 tracking-tight">Simulated Consequences Before Real Email Dispatch</h1>
+                <p class="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                    Once sent, high-stakes emails cannot be recalled. ActionGuardian automatically validates recipient genuineness, scans for credential leaks & toxic liability, and provides 1-click AI threat removal.
+                </p>
+            </div>
+            <div class="flex items-center gap-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2">
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                <span class="text-slate-700 font-medium">Protection Gateway Active</span>
+            </div>
+        </div>
+
+        <!-- Workflow progress bar -->
+        <div id="wfbar" role="list" aria-label="Review workflow progress" class="bg-white border border-slate-200 rounded-xl px-4 py-2.5 shadow-sm flex items-center overflow-x-auto">
+            <div class="wf-step current" id="wf0" role="listitem" aria-label="Step: Compose"><div class="wf-dot" aria-hidden="true">&#10003;</div><span class="wf-lbl">Compose</span></div>
+            <div class="wf-conn" aria-hidden="true"></div>
+            <div class="wf-step" id="wf1" role="listitem" aria-label="Step: Scan"><div class="wf-dot" aria-hidden="true">2</div><span class="wf-lbl">Scan</span></div>
+            <div class="wf-conn" aria-hidden="true"></div>
+            <div class="wf-step" id="wf2" role="listitem" aria-label="Step: Review"><div class="wf-dot" aria-hidden="true">3</div><span class="wf-lbl">Review</span></div>
+            <div class="wf-conn" aria-hidden="true"></div>
+            <div class="wf-step" id="wf3" role="listitem" aria-label="Step: Improve"><div class="wf-dot" aria-hidden="true">4</div><span class="wf-lbl">Improve</span></div>
+            <div class="wf-conn" aria-hidden="true"></div>
+            <div class="wf-step" id="wf4" role="listitem" aria-label="Step: Rescan"><div class="wf-dot" aria-hidden="true">5</div><span class="wf-lbl">Rescan</span></div>
+            <div class="wf-conn" aria-hidden="true"></div>
+            <div class="wf-step" id="wf5" role="listitem" aria-label="Step: Confirm"><div class="wf-dot" aria-hidden="true">6</div><span class="wf-lbl">Confirm</span></div>
+        </div>
+
+        <!-- Two-Column Interactive Studio -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left Column: Email Composer (7 Cols) -->
+            <div class="lg:col-span-7 space-y-4">
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-md bg-slate-900 text-white text-xs font-bold flex items-center justify-center">1</span>
+                            <h2 class="text-sm font-bold text-slate-900">Email Composer</h2>
+                        </div>
+                        <span class="text-[11px] text-slate-400 font-medium">Step 1: Write & Check</span>
+                    </div>
+
+                    <!-- Recipient Email Input with Genuineness Verification -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="text-xs font-semibold text-slate-700">Recipient Email Address</label>
+                            <span id="genuineness-pill" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                                Not Verified
+                            </span>
+                        </div>
+                        <input 
+                            type="email" 
+                            id="email-recipient" 
+                            oninput="onRecipientInput()"
+                            placeholder="Enter genuine email (e.g. colleague@gmail.com)" 
+                            class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition"
+                        >
+                        <!-- Prominent Genuineness Status Message -->
+                        <div id="recipient-msg-box" class="hidden mt-2 p-2.5 rounded-xl text-xs font-medium border flex items-center gap-2"></div>
+                    </div>
+
+                    <!-- Subject Input -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Subject Line</label>
+                        <input 
+                            type="text" 
+                            id="email-subject" 
+                            placeholder="Subject line..." 
+                            class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition"
+                        >
+                    </div>
+
+                    <!-- Body Content -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="text-xs font-semibold text-slate-700">Email Message Content</label>
+                            <span class="text-[11px] text-slate-400">Write text or select a sample case below</span>
+                        </div>
+                        <textarea 
+                            id="email-body" 
+                            rows="7" 
+                            placeholder="Type the email message here. ActionGuardian will inspect for passwords, credit cards, toxic words, and security risks..." 
+                            class="w-full bg-white border border-slate-300 rounded-xl p-3.5 text-xs font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition leading-relaxed"
+                        ></textarea>
+
+                        <!-- Annotated Threat Preview (Highlights detected risk words/patterns in body) -->
+                        <div id="annot-wrap" class="hidden mt-2 border border-slate-200 rounded-xl overflow-hidden shadow-sm" aria-label="Annotated body preview">
+                            <div class="annot-hd bg-slate-50 border-b border-slate-200 px-3 py-1.5 flex items-center justify-between text-[11px]">
+                                <span class="annot-hd-lbl font-bold uppercase tracking-wider text-slate-600">Annotated Threat Highlights</span>
+                                <span class="annot-hd-note text-slate-400 italic">Identifies specific risk phrases from scan</span>
+                            </div>
+                            <div id="annot-body" class="p-3 bg-white font-mono text-xs text-slate-800 leading-relaxed max-h-48 overflow-y-auto whitespace-pre-wrap"></div>
+                            <div class="annot-legend px-3 py-1.5 bg-slate-50 border-t border-slate-200 flex gap-3 text-[10px]" id="annot-legend"></div>
+                        </div>
+                    </div>
+
+                    <!-- Action Controls -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                        <button 
+                            onclick="runSimulationScan()" 
+                            id="scan-btn"
+                            class="w-full py-2.5 px-4 rounded-xl font-semibold text-xs bg-slate-900 hover:bg-slate-800 text-white shadow-sm flex items-center justify-center gap-2 transition cursor-pointer"
+                        >
+                            <svg class="w-3.5 h-3.5 animate-spin hidden" id="scan-spinner" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                            <span>Simulate & Scan for Threats</span>
+                        </button>
+
+                        <button 
+                            onclick="autoImproveEmail()" 
+                            id="rewrite-btn"
+                            class="w-full py-2.5 px-4 rounded-xl font-semibold text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-sm flex items-center justify-center gap-2 transition cursor-pointer"
+                        >
+                            <svg class="w-3.5 h-3.5 animate-spin hidden" id="rewrite-spinner" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                            <span>✨ Rewrite with AI</span>
+                        </button>
+                    </div>
+
+                    <!-- Restore Original Button (Appears after AI rewrite) -->
+                    <button 
+                        id="restb" 
+                        onclick="doRestore()" 
+                        class="hidden w-full py-2 px-3 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 font-semibold text-xs transition cursor-pointer flex items-center justify-center gap-2"
+                    >
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+                        <span>Restore original (before AI rewrite)</span>
+                    </button>
+
+                    <!-- AI Improvements Log Box -->
+                    <div id="improvements-box" class="hidden p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 text-xs space-y-2">
+                        <div class="font-bold text-indigo-900 flex items-center gap-1.5">
+                            <span>✨ AI Improvements Applied:</span>
+                        </div>
+                        <ul id="improvements-list" class="list-disc list-inside space-y-1 text-indigo-800 text-[11px]"></ul>
+                    </div>
+
+                    <!-- Before & After Comparison Panel -->
+                    <div id="cmpbox" class="hidden mt-4 pt-3 border-t border-slate-200 space-y-3" aria-label="Before and after comparison">
+                        <div class="flex items-center justify-between">
+                            <span class="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">⚖️ Before & After Comparison</span>
+                        </div>
+                        <div class="cmp-grid grid grid-cols-1 md:grid-cols-12 gap-3">
+                            <div class="cmp-side md:col-span-5 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm" id="cmp-orig">
+                                <div class="cmp-side-hd px-3 py-2 bg-slate-100/70 border-b border-slate-200 flex items-center justify-between">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-slate-600">Original Email</span>
+                                    <span class="cmp-score-pill px-2 py-0.5 rounded text-[10px] font-mono font-bold" id="cmp-orig-pill"></span>
+                                </div>
+                                <div class="cmp-body p-3 space-y-2">
+                                    <div>
+                                        <div class="text-[10px] font-semibold text-slate-400 uppercase">Subject</div>
+                                        <div class="text-xs font-semibold text-slate-800 break-words" id="cmp-orig-sub"></div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[10px] font-semibold text-slate-400 uppercase">Body Content</div>
+                                        <div class="text-xs text-slate-700 font-mono whitespace-pre-wrap break-words bg-white p-2 rounded-lg border border-slate-200 max-h-40 overflow-y-auto" id="cmp-orig-body"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="cmp-ch md:col-span-2 bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-col justify-between shadow-sm" id="cmp-changes">
+                                <div>
+                                    <div class="text-[10px] font-bold uppercase tracking-wider text-indigo-700 mb-1.5">AI Adjustments</div>
+                                    <div id="cmp-ch-list" class="space-y-1 text-[11px] text-slate-600"></div>
+                                </div>
+                                <div id="cmp-delta" class="cmp-delta mt-3 p-2 rounded-lg text-center text-xs font-bold border"></div>
+                            </div>
+
+                            <div class="cmp-side md:col-span-5 bg-slate-50 border border-slate-200 rounded-xl overflow-hidden shadow-sm" id="cmp-new">
+                                <div class="cmp-side-hd px-3 py-2 bg-indigo-50 border-b border-indigo-100 flex items-center justify-between">
+                                    <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-900">AI-Rewritten Email</span>
+                                    <span class="cmp-score-pill px-2 py-0.5 rounded text-[10px] font-mono font-bold" id="cmp-new-pill"></span>
+                                </div>
+                                <div class="cmp-body p-3 space-y-2">
+                                    <div>
+                                        <div class="text-[10px] font-semibold text-slate-400 uppercase">Subject</div>
+                                        <div class="text-xs font-semibold text-slate-800 break-words" id="cmp-new-sub"></div>
+                                    </div>
+                                    <div>
+                                        <div class="text-[10px] font-semibold text-slate-400 uppercase">Body Content</div>
+                                        <div class="text-xs text-slate-700 font-mono whitespace-pre-wrap break-words bg-white p-2 rounded-lg border border-slate-200 max-h-40 overflow-y-auto" id="cmp-new-body"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Right Column: Security Preview & Commit Gate (5 Cols) -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <!-- Inspection Card -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-md bg-slate-900 text-white text-xs font-bold flex items-center justify-center">2</span>
+                            <h2 class="text-sm font-bold text-slate-900">Safety Inspection & Commit</h2>
+                        </div>
+                        <span class="text-[11px] text-slate-400 font-medium">Step 2: Review & Send</span>
+                    </div>
+
+                    <!-- Risk Gauge Meter -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Predicted Risk Profile</span>
+                                <div class="text-lg font-black tracking-tight" id="risk-badge">AWAITING SCAN</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-black font-mono" id="risk-score">--/100</div>
+                                <span class="text-[10px] text-slate-400">Risk Severity Score</span>
+                            </div>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                            <div id="risk-meter" class="h-2 rounded-full bg-slate-400 transition-all duration-300" style="width: 0%;"></div>
+                        </div>
+
+                        <!-- Live Side-by-Side Risk Reduction Tracker -->
+                        <div id="score-reduction-pill" class="hidden p-2.5 rounded-xl bg-emerald-50 border border-emerald-300 text-xs text-emerald-900 flex items-center justify-between transition-all shadow-sm">
+                            <div class="flex items-center gap-1.5 font-bold">
+                                <span>📉 Threat Reduced:</span>
+                                <span id="reduction-details" class="font-mono text-emerald-800 font-extrabold">55 ➔ 0 (-55 pts)</span>
+                            </div>
+                            <span id="reduction-pct" class="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-black uppercase tracking-wider">-100% Risk</span>
+                        </div>
+                    </div>
+
+                    <!-- Score History Row (Shown once at least two readings exist) -->
+                    <div id="score-hist" class="hidden p-3 rounded-xl bg-slate-50 border border-slate-200 text-xs" aria-live="polite" aria-label="Score history">
+                        <div class="sh-row flex items-center gap-2 flex-wrap" id="sh-row"></div>
+                    </div>
+
+                    <!-- Detected Threats / Consequences -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-semibold text-slate-700">Detected Threats & Liabilities</label>
+                        <div id="consequences-container" class="space-y-2 min-h-[90px]">
+                            <div class="p-4 rounded-xl border border-dashed border-slate-200 text-center text-xs text-slate-400">
+                                Click "Simulate & Scan for Threats" or select a sample case below to evaluate consequences.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Commit Gate Section -->
+                    <div class="border-t border-slate-100 pt-4 space-y-3">
+                        <div class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <input type="checkbox" id="confirm-checkbox" onchange="toggleSendButton()" class="mt-0.5 rounded border-slate-300 text-slate-900 focus:ring-slate-900 cursor-pointer">
+                            <label for="confirm-checkbox" class="text-[11px] text-slate-600 leading-tight cursor-pointer">
+                                I confirm the recipient email address is genuine and authorize dispatching this email.
+                            </label>
+                        </div>
+
+                        <button 
+                            onclick="dispatchEmail()" 
+                            id="send-btn"
+                            disabled
+                            class="w-full py-3 px-4 rounded-xl font-bold text-xs bg-slate-200 text-slate-400 cursor-not-allowed transition shadow-sm flex items-center justify-center gap-2"
+                        >
+                            <svg class="w-4 h-4 animate-spin hidden" id="send-spinner" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                            <span>Send Real Email</span>
+                        </button>
+
+                        <!-- Delivery Status Alert -->
+                        <div id="delivery-alert" class="hidden p-3.5 rounded-xl text-xs space-y-1"></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Curated Sample Test Cases Section -->
+        <section id="sample-cases-section" class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900">Curated Hackathon Test Scenarios</h3>
+                    <p class="text-xs text-slate-500">Select any scenario to load into the composer, test threat detection, and run 1-click AI improvement.</p>
+                </div>
+                <div class="flex items-center gap-2 text-xs">
+                    <span id="badge-risky-count" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-rose-50 text-rose-700 font-semibold border border-rose-200">16 Risky</span>
+                    <span id="badge-safe-count" class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">5 Safe</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="testcases-grid">
+                <!-- Dynamically populated from /api/benchmark -->
+            </div>
+        </section>
+
+        <!-- Future Scope / Roadmap Section -->
+        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+            <div class="border-b border-slate-100 pb-3 flex items-center justify-between">
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="text-base font-bold text-slate-900">🚀 Future Scope & Architectural Extensions</span>
+                        <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">Roadmap</span>
+                    </div>
+                    <p class="text-xs text-slate-500 mt-1">Interactive modules planned for production rollout beyond email (hover or click to explore):</p>
+                </div>
+            </div>
+
+            <div class="acc space-y-3" role="list">
+                <!-- Item 1: Financial Transactions -->
+                <div class="acc-item border border-slate-200 rounded-xl overflow-hidden bg-slate-50/50 hover:border-slate-300 transition" role="listitem">
+                    <button class="acc-trigger w-full p-4 flex items-center gap-3.5 text-left cursor-pointer transition hover:bg-slate-100/60" id="acc-btn-1" aria-expanded="false" aria-controls="acc-panel-1">
+                        <span class="acc-icon w-8 h-8 rounded-lg bg-indigo-100 text-indigo-700 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                        </span>
+                        <div class="acc-th flex-1 min-w-0">
+                            <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-indigo-100 text-indigo-800">Planned</span>
+                            <div class="text-xs font-bold text-slate-900 mt-0.5">Financial Transactions & Payment Gateway</div>
+                        </div>
+                        <span class="acc-chevron text-slate-400 transition-transform duration-200">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                        </span>
+                    </button>
+                    <div class="acc-panel max-h-0 overflow-hidden transition-all duration-300" id="acc-panel-1" role="region" aria-labelledby="acc-btn-1">
+                        <div class="acc-body p-4 pt-1 text-xs text-slate-600 leading-relaxed border-t border-slate-200/60 bg-white">
+                            Third-party payment gateways (Stripe, Razorpay) require verified merchant KYC and live banking credentials. The dry-run sandbox will simulate multi-signature approvals for payments exceeding $1,000 before dispatching webhooks to live payment rails.
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Item 2: Docker Shadow Sandbox -->
+                <div class="acc-item border border-slate-200 rounded-xl overflow-hidden bg-slate-50/50 hover:border-slate-300 transition" role="listitem">
+                    <button class="acc-trigger w-full p-4 flex items-center gap-3.5 text-left cursor-pointer transition hover:bg-slate-100/60" id="acc-btn-2" aria-expanded="false" aria-controls="acc-panel-2">
+                        <span class="acc-icon w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center flex-shrink-0">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+                        </span>
+                        <div class="acc-th flex-1 min-w-0">
+                            <span class="text-[10px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800">Planned</span>
+                            <div class="text-xs font-bold text-slate-900 mt-0.5">Docker Shadow Sandbox for Code Deployment</div>
+                        </div>
+                        <span class="acc-chevron text-slate-400 transition-transform duration-200">
+                            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg>
+                        </span>
+                    </button>
+                    <div class="acc-panel max-h-0 overflow-hidden transition-all duration-300" id="acc-panel-2" role="region" aria-labelledby="acc-btn-2">
+                        <div class="acc-body p-4 pt-1 text-xs text-slate-600 leading-relaxed border-t border-slate-200/60 bg-white">
+                            Simulating destructive Linux/SQL commands (<code class="bg-slate-100 px-1 py-0.5 rounded text-rose-600 font-mono">DROP TABLE</code>, <code class="bg-slate-100 px-1 py-0.5 rounded text-rose-600 font-mono">rm -rf</code>) inside real disposable Docker containers before executing against production cloud databases. If the containerized service crashes, the commit gate automatically aborts real-world deployment.
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section 6: ActionGuardian Scoring v2 Intervention Popup Modal -->
+        <div id="v2-popup-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+            <div class="bg-white border border-slate-200 rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden">
+                <!-- Modal Header -->
+                <div id="v2-modal-header" class="p-5 border-b border-slate-100 flex items-center justify-between">
+                    <div class="flex items-center gap-2.5">
+                        <div id="v2-modal-icon" class="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm bg-amber-100 text-amber-800">
+                            ⚠️
+                        </div>
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <h3 class="text-sm font-bold text-slate-900" id="v2-modal-title">Pre-Dispatch Safety Intervention</h3>
+                                <span id="v2-modal-tier-badge" class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-amber-100 text-amber-800 font-mono">MEDIUM</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500" id="v2-modal-subtitle">Potential unintended consequences detected before send</p>
+                        </div>
+                    </div>
+                    <div class="text-right">
+                        <span class="text-xl font-mono font-black text-slate-900" id="v2-modal-score">57/100</span>
+                        <span class="block text-[9px] uppercase tracking-wider text-slate-400 font-semibold">Risk Score</span>
+                    </div>
+                </div>
+
+                <!-- Modal Body: Section 6 Three Questions -->
+                <div class="p-5 space-y-3.5 bg-slate-50/50">
+                    <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">
+                        Consequence Assessment (3-Question Model)
+                    </div>
+
+                    <!-- Q1 -->
+                    <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
+                        <div class="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                            <span class="text-indigo-600 font-extrabold">Q1. Intent:</span>
+                            <span class="text-[10px] text-slate-400 font-normal">What was the agent trying to achieve?</span>
+                        </div>
+                        <p class="text-xs text-slate-700 font-medium pl-3 border-l-2 border-indigo-400" id="v2-modal-q1">
+                            Routine email communication
+                        </p>
+                    </div>
+
+                    <!-- Q2 -->
+                    <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
+                        <div class="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                            <span class="text-amber-600 font-extrabold">Q2. Could it backfire?:</span>
+                            <span class="text-[10px] text-slate-400 font-normal">Risk band & key factors</span>
+                        </div>
+                        <p class="text-xs text-slate-700 font-medium pl-3 border-l-2 border-amber-400" id="v2-modal-q2">
+                            Backfire factors...
+                        </p>
+                    </div>
+
+                    <!-- Q3 -->
+                    <div class="p-3 bg-white rounded-xl border border-slate-200 space-y-1">
+                        <div class="flex items-center gap-1.5 text-xs font-bold text-slate-900">
+                            <span class="text-rose-600 font-extrabold">Q3. If it does, what happens?:</span>
+                            <span class="text-[10px] text-slate-400 font-normal">Consequence category & worst-case impact</span>
+                        </div>
+                        <p class="text-xs text-slate-700 font-medium pl-3 border-l-2 border-rose-400" id="v2-modal-q3">
+                            Consequence impact...
+                        </p>
+                    </div>
+
+                    <!-- Hard Block Alert for CRITICAL (>= 80) -->
+                    <div id="v2-modal-critical-warning" class="hidden p-3 rounded-xl bg-rose-50 border border-rose-300 text-rose-900 text-xs space-y-1">
+                        <div class="font-bold flex items-center gap-1.5">
+                            <span>⛔ Hard Block Enforced (Spec Section 4 & 5):</span>
+                        </div>
+                        <p class="text-[11px] text-rose-800 leading-relaxed">
+                            This action contains critical security liabilities (credentials, private key, or violent threats) and is strictly blocked from dispatch. You must rewrite or sanitize before sending.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Modal Footer Controls -->
+                <div class="p-4 bg-white border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+                    <button 
+                        type="button" 
+                        id="v2-modal-rewrite-btn"
+                        onclick="closeV2Modal(); autoImproveEmail();" 
+                        class="w-full sm:w-auto px-4 py-2.5 rounded-xl text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white shadow-sm flex items-center justify-center gap-1.5 transition cursor-pointer"
+                    >
+                        <span>✨ Rewrite with AI</span>
+                    </button>
+
+                    <div class="flex items-center gap-2 w-full sm:w-auto justify-end">
+                        <button 
+                            type="button" 
+                            onclick="closeV2Modal()" 
+                            class="px-3 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition cursor-pointer"
+                        >
+                            Review in Editor
+                        </button>
+                        <button 
+                            type="button" 
+                            id="v2-modal-send-btn"
+                            onclick="handleModalSendAnyway()" 
+                            class="px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition cursor-pointer"
+                        >
+                            Send Anyway
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Application Script (Zero browser alert popups) -->
+    <script>
+        let currentPreviewId = null;
+        let currentSimulation = null;
+        let isRecipientValid = false;
+        let sampleCases = [];
+        let verifyTimeout = null;
+        let currentRewriteIteration = 0;
+
+        // Workflow & Score History & Comparison State
+        let wfScanned = false;
+        let wfScanDirty = false;
+        let wfImproved = false;
+        let wfRescanned = false;
+        let origSub = null, origBody = null, origSim = null;
+        let shOrigSim = null, shEstSim = null, shRescanSim = null;
+
+        // Show Clean Inline Status Banner
+        function showBanner(message, type = "info") {
+            const banner = document.getElementById("status-banner");
+            banner.classList.remove("hidden", "bg-rose-50", "border-rose-200", "text-rose-800", "bg-emerald-50", "border-emerald-200", "text-emerald-800", "bg-blue-50", "border-blue-200", "text-blue-800");
+
+            if (type === "error") {
+                banner.classList.add("bg-rose-50", "border-rose-200", "text-rose-800");
+            } else if (type === "success") {
+                banner.classList.add("bg-emerald-50", "border-emerald-200", "text-emerald-800");
+            } else {
+                banner.classList.add("bg-blue-50", "border-blue-200", "text-blue-800");
+            }
+
+            banner.innerHTML = message;
+            setTimeout(() => {
+                banner.classList.add("hidden");
+            }, 6000);
+        }
+
+        // Load Configured Sender info from config.py
+        async function loadSenderInfo() {
+            try {
+                const res = await fetch("/api/sender");
+                const data = await res.json();
+                document.getElementById("active-sender-display").innerText = data.sender_email;
+            } catch (err) {
+                document.getElementById("active-sender-display").innerText = "Fixed in config.py";
+            }
+        }
+
+        // Real-Time Recipient Email Genuineness Verification
+        function onRecipientInput() {
+            clearTimeout(verifyTimeout);
+            verifyTimeout = setTimeout(() => {
+                verifyRecipientEmail();
+            }, 500);
+        }
+
+        async function verifyRecipientEmail() {
+            const email = document.getElementById("email-recipient").value.trim();
+            const pill = document.getElementById("genuineness-pill");
+            const msgBox = document.getElementById("recipient-msg-box");
+
+            if (!email) {
+                pill.className = "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200";
+                pill.innerText = "Not Verified";
+                msgBox.classList.add("hidden");
+                isRecipientValid = false;
+                toggleSendButton();
+                return;
+            }
+
+            pill.className = "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200";
+            pill.innerText = "Verifying DNS...";
+
+            try {
+                const res = await fetch("/api/verify_email", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+
+                if (data.is_valid && data.domain_exists) {
+                    pill.className = "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200";
+                    pill.innerText = "✓ Valid & DNS Verified";
+                    msgBox.className = "mt-2 p-2.5 rounded-xl text-xs font-medium border bg-emerald-50 border-emerald-200 text-emerald-800 flex items-center gap-2";
+                    msgBox.innerHTML = `<span>✓</span><span><b>Email Domain Verified:</b> ${data.message}</span>`;
+                    msgBox.classList.remove("hidden");
+                    isRecipientValid = true;
+                } else {
+                    pill.className = "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200";
+                    pill.innerText = "✕ No Such Email Exists";
+                    msgBox.className = "mt-2 p-2.5 rounded-xl text-xs font-medium border bg-rose-50 border-rose-200 text-rose-800 flex items-center gap-2";
+                    msgBox.innerHTML = `<span>✕</span><span><b>No such email exists:</b> ${data.error}</span>`;
+                    msgBox.classList.remove("hidden");
+                    isRecipientValid = false;
+                }
+            } catch (err) {
+                pill.className = "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200";
+                pill.innerText = "Verification Offline";
+                isRecipientValid = false;
+            }
+            toggleSendButton();
+        }
+
+        // Threat Simulation Scan
+        async function runSimulationScan() {
+            document.getElementById("score-reduction-pill")?.classList.add("hidden");
+            const btn = document.getElementById("scan-btn");
+            const spinner = document.getElementById("scan-spinner");
+            btn.disabled = true;
+            spinner.classList.remove("hidden");
+
+            let target = document.getElementById("email-recipient").value.trim();
+            const subject = document.getElementById("email-subject").value.trim();
+            const content = document.getElementById("email-body").value.trim();
+
+            if (!content) {
+                showBanner("Please enter an email message body to scan.", "error");
+                btn.disabled = false;
+                spinner.classList.add("hidden");
+                return;
+            }
+
+            if (!target) {
+                target = "demo-recipient@example.com";
+                document.getElementById("email-recipient").value = target;
+                if (typeof onRecipientInput === "function") onRecipientInput();
+            }
+
+            try {
+                const res = await fetch("/api/preview", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        domain: "EMAIL",
+                        target: target,
+                        subject: subject,
+                        content: content
+                    })
+                });
+                const data = await res.json();
+                renderSimulation(data);
+            } catch (err) {
+                showBanner("Could not connect to simulation server. Please make sure run.bat is open.", "error");
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add("hidden");
+            }
+        }
+
+        function renderSimulation(data) {
+            const sim = data.simulation;
+            currentPreviewId = data.preview_id;
+            currentSimulation = sim;
+
+            // Update Score & Gauge (v2 Tiers: SAFE 0-39, MEDIUM 40-59, HIGH 60-79, CRITICAL 80-100)
+            document.getElementById("risk-score").innerText = `${sim.risk_score}/100`;
+            const badge = document.getElementById("risk-badge");
+            badge.innerText = sim.risk_level;
+
+            const meter = document.getElementById("risk-meter");
+            meter.style.width = `${sim.risk_score}%`;
+
+            if (sim.risk_score >= 80) { // CRITICAL (80 to 100)
+                badge.className = "text-lg font-black text-rose-600 tracking-tight";
+                meter.className = "h-2 rounded-full bg-rose-600";
+            } else if (sim.risk_score >= 60) { // HIGH (60 to 79)
+                badge.className = "text-lg font-black text-orange-600 tracking-tight";
+                meter.className = "h-2 rounded-full bg-orange-500";
+            } else if (sim.risk_score >= 40) { // MEDIUM (40 to 59)
+                badge.className = "text-lg font-black text-amber-600 tracking-tight";
+                meter.className = "h-2 rounded-full bg-amber-500";
+            } else { // SAFE (0 to 39)
+                badge.className = "text-lg font-black text-emerald-600 tracking-tight";
+                meter.className = "h-2 rounded-full bg-emerald-500";
+            }
+
+            // Threats and Section 6 3-Questions container
+            const container = document.getElementById("consequences-container");
+            container.innerHTML = "";
+
+            if (sim.risk_score < 40) {
+                // Tier SAFE (0-39): Spec says zero interruption, no popup
+                container.innerHTML = `
+                    <div class="p-4 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 space-y-1.5 shadow-sm">
+                        <div class="flex items-center justify-between font-bold">
+                            <span class="flex items-center gap-1.5">✓ Tier: SAFE (Score ${sim.risk_score}/100)</span>
+                            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-200 text-emerald-900 font-bold">CLEARED</span>
+                        </div>
+                        <p class="text-[11px] leading-relaxed text-emerald-700">
+                            No credentials, hostile language, or severe liabilities detected. Safe for direct dispatch with 10-second silent undo window.
+                        </p>
+                    </div>`;
+                closeV2Modal();
+            } else {
+                // Tier MEDIUM (40-59), HIGH (60-79), CRITICAL (80-100)
+                const v2 = sim.v2_details || {};
+                const q1 = v2.intent_summary || "Routine email communication";
+                const q2 = v2.backfire_summary || "Elevated backfire risk";
+                const q3 = v2.consequence_summary || "Potential liability impact";
+
+                const assessmentCard = document.createElement("div");
+                const borderColor = sim.risk_score >= 80 ? "border-rose-300 bg-rose-50/40" : (sim.risk_score >= 60 ? "border-orange-300 bg-orange-50/40" : "border-amber-300 bg-amber-50/40");
+                const badgeColor = sim.risk_score >= 80 ? "bg-rose-100 text-rose-800 border-rose-200" : (sim.risk_score >= 60 ? "bg-orange-100 text-orange-800 border-orange-200" : "bg-amber-100 text-amber-800 border-amber-200");
+
+                assessmentCard.className = `p-4 rounded-xl border ${borderColor} space-y-3 text-xs shadow-sm`;
+                assessmentCard.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="font-bold text-slate-900 flex items-center gap-1.5">🛡️ 3-Question Impact Assessment</span>
+                        <span class="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded border ${badgeColor}">${sim.risk_level} (${sim.risk_score}/100)</span>
+                    </div>
+                    <div class="space-y-2 text-[11px]">
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200">
+                            <b class="text-indigo-700">Q1. Intent:</b> <span class="text-slate-700">${q1}</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200">
+                            <b class="text-amber-700">Q2. Could it backfire?:</b> <span class="text-slate-700">${q2}</span>
+                        </div>
+                        <div class="bg-white p-2.5 rounded-lg border border-slate-200">
+                            <b class="text-rose-700">Q3. If it does, what happens?:</b> <span class="text-slate-700">${q3}</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(assessmentCard);
+
+                // Show Section 6 Intervention Modal Popup
+                showV2Modal(sim);
+            }
+
+            // Update workflow bar, score history, and annotated threat highlights
+            if (wfImproved && !wfRescanned) {
+                wfRescanned = true;
+                wfScanDirty = false;
+                shRescanSim = sim;
+            } else if (!wfImproved) {
+                wfScanned = true;
+                wfScanDirty = false;
+                shOrigSim = sim;
+                shEstSim = null;
+                shRescanSim = null;
+            }
+            renderWfBar();
+            updateScoreHistory();
+            buildAnnotatedPreview(document.getElementById("email-body").value, sim.consequences);
+
+            toggleSendButton();
+        }
+
+        function showV2Modal(sim) {
+            const modal = document.getElementById("v2-popup-modal");
+            if (!modal) return;
+            const details = sim.v2_details || {};
+            document.getElementById("v2-modal-score").innerText = `${sim.risk_score}/100`;
+            document.getElementById("v2-modal-tier-badge").innerText = sim.risk_level;
+            document.getElementById("v2-modal-q1").innerText = details.intent_summary || "Routine email communication";
+            document.getElementById("v2-modal-q2").innerText = details.backfire_summary || "Low backfire probability";
+            document.getElementById("v2-modal-q3").innerText = details.consequence_summary || "Operational impact";
+
+            const criticalAlert = document.getElementById("v2-modal-critical-warning");
+            const sendBtn = document.getElementById("v2-modal-send-btn");
+            const header = document.getElementById("v2-modal-header");
+            const icon = document.getElementById("v2-modal-icon");
+
+            if (sim.risk_score >= 80) {
+                // CRITICAL (80 to 100): Hard Blocked, Send button disabled
+                criticalAlert.classList.remove("hidden");
+                sendBtn.disabled = true;
+                sendBtn.className = "px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-200 text-slate-400 cursor-not-allowed";
+                sendBtn.innerText = "Dispatch Blocked";
+                header.className = "p-5 border-b border-rose-100 bg-rose-50/50 flex items-center justify-between";
+                icon.className = "w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm bg-rose-100 text-rose-800";
+                icon.innerText = "⛔";
+            } else if (sim.risk_score >= 60) {
+                // HIGH (60 to 79): Full popup with rewrite recommended
+                criticalAlert.classList.add("hidden");
+                sendBtn.disabled = false;
+                sendBtn.className = "px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition cursor-pointer";
+                sendBtn.innerText = "Send with Override";
+                header.className = "p-5 border-b border-orange-100 bg-orange-50/50 flex items-center justify-between";
+                icon.className = "w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm bg-orange-100 text-orange-800";
+                icon.innerText = "⚠️";
+            } else {
+                // MEDIUM (40 to 59): Small popup, Send anyway or Rewrite
+                criticalAlert.classList.add("hidden");
+                sendBtn.disabled = false;
+                sendBtn.className = "px-4 py-2.5 rounded-xl text-xs font-bold bg-slate-900 hover:bg-slate-800 text-white shadow-sm transition cursor-pointer";
+                sendBtn.innerText = "Send Anyway";
+                header.className = "p-5 border-b border-amber-100 bg-amber-50/50 flex items-center justify-between";
+                icon.className = "w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm bg-amber-100 text-amber-800";
+                icon.innerText = "⚠️";
+            }
+
+            modal.classList.remove("hidden");
+        }
+
+        function closeV2Modal() {
+            const modal = document.getElementById("v2-popup-modal");
+            if (modal) modal.classList.add("hidden");
+        }
+
+        // Backdrop click to close popup
+        document.addEventListener("DOMContentLoaded", () => {
+            const v2Modal = document.getElementById("v2-popup-modal");
+            if (v2Modal) {
+                v2Modal.addEventListener("click", (e) => {
+                    if (e.target === v2Modal) closeV2Modal();
+                });
+            }
+        });
+
+        // Keyboard navigation (Escape closes modal, Ctrl+Enter triggers scan safely)
+        document.addEventListener("keydown", (e) => {
+            if (e.key === "Escape") {
+                closeV2Modal();
+            }
+            if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+                // If modal is open, do not dispatch on Ctrl+Enter
+                const modal = document.getElementById("v2-popup-modal");
+                if (!modal || modal.classList.contains("hidden")) {
+                    runSimulationScan();
+                }
+            }
+        });
+
+        let undoCountdownInterval = null;
+        function startUndoTimer() {
+            let secondsLeft = 10;
+            const timerSpan = document.getElementById("undo-timer");
+            if (!timerSpan) return;
+            clearInterval(undoCountdownInterval);
+            undoCountdownInterval = setInterval(() => {
+                secondsLeft -= 1;
+                if (secondsLeft <= 0) {
+                    clearInterval(undoCountdownInterval);
+                    const undoBox = document.getElementById("undo-container");
+                    if (undoBox) undoBox.innerHTML = `<span class="text-[11px] font-medium text-emerald-800">✓ 10s undo grace period elapsed. Dispatched to recipient.</span>`;
+                } else {
+                    timerSpan.innerText = `${secondsLeft}s`;
+                }
+            }, 1000);
+        }
+
+        function undoDispatch(receiptId) {
+            clearInterval(undoCountdownInterval);
+            const alertBox = document.getElementById("delivery-alert");
+            alertBox.className = "p-4 rounded-xl bg-amber-50 border border-amber-300 text-xs text-amber-900 space-y-1";
+            alertBox.innerHTML = `
+                <div class="font-bold flex items-center gap-1.5">
+                    <span>↺ Dispatch Canceled (Undo Window Used)</span>
+                </div>
+                <p class="text-[11px] text-amber-800">
+                    The outbound dispatch was aborted before transmission. The email draft has been retained in the editor.
+                </p>
+            `;
+            showBanner("Email dispatch undone successfully within 10s grace window.", "info");
+        }
+
+        // Rewrite with AI (Polished corporate reformulation with dynamic score reduction)
+        async function autoImproveEmail() {
+            closeV2Modal();
+            const btn = document.getElementById("rewrite-btn");
+            const spinner = document.getElementById("rewrite-spinner");
+            btn.disabled = true;
+            spinner.classList.remove("hidden");
+
+            const target = document.getElementById("email-recipient").value.trim() || "colleague@gmail.com";
+            const subject = document.getElementById("email-subject").value.trim();
+            const content = document.getElementById("email-body").value.trim();
+
+            if (!content) {
+                showBanner("Please write or select an email before rewriting.", "error");
+                btn.disabled = false;
+                spinner.classList.add("hidden");
+                return;
+            }
+
+            // Snapshot before rewrite for restore & comparison
+            const snapSub = subject;
+            const snapBody = content;
+            const snapSim = currentSimulation;
+
+            currentRewriteIteration += 1;
+
+            try {
+                const res = await fetch("/api/rewrite", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ 
+                        target, 
+                        subject, 
+                        content,
+                        iteration: currentRewriteIteration 
+                    })
+                });
+                const data = await res.json();
+
+                // Update text areas with beautifully drafted content
+                document.getElementById("email-body").value = data.remediated_content || "";
+                if (data.remediated_subject) {
+                    document.getElementById("email-subject").value = data.remediated_subject;
+                }
+
+                // Save snapshot for Restore button
+                origSub = snapSub;
+                origBody = snapBody;
+                origSim = snapSim;
+                document.getElementById("restb")?.classList.remove("hidden");
+
+                // Update workflow progress
+                wfImproved = true;
+                wfScanDirty = true;
+                renderWfBar();
+
+                // Show changes box
+                const box = document.getElementById("improvements-box");
+                const list = document.getElementById("improvements-list");
+                list.innerHTML = "";
+
+                if (data.changes && data.changes.length > 0) {
+                    data.changes.forEach(ch => {
+                        const li = document.createElement("li");
+                        li.innerText = ch;
+                        list.appendChild(li);
+                    });
+                    box.classList.remove("hidden");
+                } else {
+                    box.classList.add("hidden");
+                }
+
+                // Render clean preview result side by side
+                const newSim = data.clean_preview ? data.clean_preview.simulation : null;
+                const newSub = document.getElementById("email-subject").value;
+                const newBody = document.getElementById("email-body").value;
+
+                if (data.clean_preview) {
+                    renderSimulation(data.clean_preview);
+                    shEstSim = newSim;
+                    updateScoreHistory();
+                }
+
+                // Render Before & After Comparison Panel
+                renderComparison(snapSim, snapSub, snapBody, newSim, newSub, newBody, data.changes || []);
+
+                // Update side-by-side Score Reduction Tracker
+                const pill = document.getElementById("score-reduction-pill");
+                const details = document.getElementById("reduction-details");
+                const pctSpan = document.getElementById("reduction-pct");
+
+                const oldScore = (data.old_score !== undefined) ? data.old_score : (snapSim ? snapSim.risk_score : 0);
+                const newScore = (data.new_score !== undefined) ? data.new_score : (newSim ? newSim.risk_score : 0);
+                const diff = oldScore - newScore;
+
+                if (pill && diff > 0) {
+                    const pct = oldScore > 0 ? Math.round((diff / oldScore) * 100) : 100;
+                    details.innerText = `${oldScore} ➔ ${newScore} (-${diff} pts)`;
+                    pctSpan.innerText = `-${pct}% Risk`;
+                    pill.classList.remove("hidden");
+                    showBanner(`✨ AI Rewrote Email (Pass #${currentRewriteIteration}): Risk score reduced from ${oldScore} to ${newScore} (-${diff} points, -${pct}%)!`, "success");
+                } else if (pill) {
+                    pill.classList.add("hidden");
+                    showBanner(`✨ AI Rewrote Email (Pass #${currentRewriteIteration}): Tone refined to ${newScore}/100.`, "success");
+                }
+
+            } catch (err) {
+                showBanner("Could not rewrite email: Server unavailable.", "error");
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add("hidden");
+            }
+        }
+
+        // Restore original draft from before AI rewrite
+        function doRestore() {
+            if (origSub === null && origBody === null) return;
+            document.getElementById("email-subject").value = origSub || "";
+            document.getElementById("email-body").value = origBody || "";
+            origSub = null;
+            origBody = null;
+            origSim = null;
+            document.getElementById("restb")?.classList.add("hidden");
+            clearComparison();
+            wfImproved = false;
+            wfScanDirty = true;
+            wfRescanned = false;
+            clearAnnotPreview();
+            renderWfBar();
+            showBanner("Restored original email draft before AI rewrite.", "info");
+        }
+
+        // Comparison score pill styling
+        function scorePillStyle(sim, el) {
+            if (!el) return;
+            if (!sim || sim.risk_score == null) {
+                el.removeAttribute("style");
+                el.className = "text-[10px] text-slate-400";
+                el.innerText = "N/A";
+                return;
+            }
+            const s = sim.risk_score;
+            let bg, bd, tx;
+            if (s < 10) { bg = "#ecfdf5"; bd = "#a7f3d0"; tx = "#047857"; }
+            else if (s < 40) { bg = "#f0fdf4"; bd = "#bbf7d0"; tx = "#15803d"; }
+            else if (s < 60) { bg = "#fffbeb"; bd = "#fde68a"; tx = "#b45309"; }
+            else if (s < 80) { bg = "#fff7ed"; bd = "#fed7aa"; tx = "#c2410c"; }
+            else { bg = "#fef2f2"; bd = "#fecaca"; tx = "#b91c1c"; }
+            el.className = "cmp-score-pill";
+            el.style.cssText = `background:${bg};border-color:${bd};color:${tx};`;
+            el.textContent = `${s}/100 · ${sim.risk_level || 'RISK'}`;
+        }
+
+        // Render Before & After Comparison
+        function renderComparison(origSimSnap, oSub, oBody, newSimSnap, nSub, nBody, changes) {
+            const cmpBox = document.getElementById("cmpbox");
+            if (!cmpBox) return;
+
+            document.getElementById("cmp-orig-sub").textContent = oSub || "(empty)";
+            document.getElementById("cmp-orig-body").textContent = oBody || "(empty)";
+            scorePillStyle(origSimSnap, document.getElementById("cmp-orig-pill"));
+
+            document.getElementById("cmp-new-sub").textContent = nSub || "(empty)";
+            document.getElementById("cmp-new-body").textContent = nBody || "(empty)";
+            scorePillStyle(newSimSnap, document.getElementById("cmp-new-pill"));
+
+            const chList = document.getElementById("cmp-ch-list");
+            chList.innerHTML = "";
+            if (changes && changes.length > 0) {
+                changes.forEach(ch => {
+                    const d = document.createElement("div");
+                    d.className = "cmp-ch-item";
+                    d.textContent = ch;
+                    chList.appendChild(d);
+                });
+            } else {
+                const nd = document.createElement("div");
+                nd.className = "cmp-ch-item";
+                nd.textContent = "No specific changes reported.";
+                chList.appendChild(nd);
+            }
+
+            const delta = document.getElementById("cmp-delta");
+            if (origSimSnap && origSimSnap.risk_score != null && newSimSnap && newSimSnap.risk_score != null) {
+                const diff = newSimSnap.risk_score - origSimSnap.risk_score;
+                const absDiff = Math.abs(diff);
+                if (diff < 0) {
+                    delta.className = "cmp-delta better mt-3 p-2 rounded-lg text-center text-xs font-bold border";
+                    delta.textContent = `Risk down ${absDiff} pts`;
+                } else if (diff > 0) {
+                    delta.className = "cmp-delta worse mt-3 p-2 rounded-lg text-center text-xs font-bold border";
+                    delta.textContent = `Risk up ${diff} pts`;
+                } else {
+                    delta.className = "cmp-delta same mt-3 p-2 rounded-lg text-center text-xs font-bold border";
+                    delta.textContent = "Risk unchanged";
+                }
+            } else {
+                delta.className = "cmp-delta same mt-3 p-2 rounded-lg text-center text-xs font-bold border";
+                delta.textContent = "Score unavailable";
+            }
+            cmpBox.classList.remove("hidden");
+        }
+
+        function clearComparison() {
+            const cmpBox = document.getElementById("cmpbox");
+            if (cmpBox) cmpBox.classList.add("hidden");
+            const chList = document.getElementById("cmp-ch-list");
+            if (chList) chList.innerHTML = "";
+            const origSubEl = document.getElementById("cmp-orig-sub");
+            if (origSubEl) origSubEl.textContent = "";
+            const origBodyEl = document.getElementById("cmp-orig-body");
+            if (origBodyEl) origBodyEl.textContent = "";
+            const newSubEl = document.getElementById("cmp-new-sub");
+            if (newSubEl) newSubEl.textContent = "";
+            const newBodyEl = document.getElementById("cmp-new-body");
+            if (newBodyEl) newBodyEl.textContent = "";
+        }
+
+        // Render Workflow Progress Bar
+        function renderWfBar() {
+            const steps = ['wf0', 'wf1', 'wf2', 'wf3', 'wf4', 'wf5'];
+            const hasTxt = (document.getElementById('email-body')?.value.trim().length || 0) > 0 ||
+                          (document.getElementById('email-subject')?.value.trim().length || 0) > 0;
+            const confirmed = document.getElementById('confirm-checkbox')?.checked && currentPreviewId && isRecipientValid;
+            const states = [
+                hasTxt ? 'done' : 'current',                                              // Compose
+                wfScanned && !wfScanDirty ? 'done' : (wfScanDirty ? 'stale' : 'current'), // Scan
+                wfScanned && !wfScanDirty ? 'done' : (wfScanDirty ? 'stale' : ''),        // Review
+                wfImproved ? 'done' : '',                                                 // Improve
+                wfRescanned ? 'done' : (wfImproved && !wfRescanned ? 'current' : ''),     // Rescan
+                confirmed ? 'done' : (wfRescanned || wfScanned ? 'current' : ''),         // Confirm
+            ];
+            let foundCurrent = false;
+            steps.forEach((id, i) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                let st = states[i];
+                if (!st && !foundCurrent && i > 0) { st = ''; }
+                el.className = 'wf-step' + (st ? ' ' + st : '');
+                const dot = el.querySelector('.wf-dot');
+                if (dot) {
+                    if (st === 'done') { dot.innerHTML = '&#10003;'; }
+                    else { dot.textContent = i + 1; }
+                }
+                if (st === 'current') foundCurrent = true;
+            });
+        }
+
+        // Score History Helpers
+        function shPillHTML(sim, extraClass) {
+            if (!sim || sim.risk_score == null) return `<span class="sh-pill${extraClass ? ' ' + extraClass : ''}">—</span>`;
+            const s = sim.risk_score;
+            let bg, bd, tx;
+            if (s < 10) { bg = '#ecfdf5'; bd = '#a7f3d0'; tx = '#047857'; }
+            else if (s < 40) { bg = '#f0fdf4'; bd = '#bbf7d0'; tx = '#15803d'; }
+            else if (s < 60) { bg = '#fffbeb'; bd = '#fde68a'; tx = '#b45309'; }
+            else if (s < 80) { bg = '#fff7ed'; bd = '#fed7aa'; tx = '#c2410c'; }
+            else { bg = '#fef2f2'; bd = '#fecaca'; tx = '#b91c1c'; }
+            return `<span class="sh-pill${extraClass ? ' ' + extraClass : ''}" style="background:${bg};border-color:${bd};color:${tx};">${s}/100</span>`;
+        }
+
+        function updateScoreHistory() {
+            const box = document.getElementById('score-hist');
+            const row = document.getElementById('sh-row');
+            if (!box || !row) return;
+            if (!shOrigSim && !shEstSim && !shRescanSim) {
+                box.classList.add('hidden');
+                return;
+            }
+            let html = '';
+            if (shOrigSim) {
+                html += '<span class="sh-tag">Original scan</span>' + shPillHTML(shOrigSim, '');
+            }
+            if (shEstSim) {
+                const diff = shOrigSim ? shEstSim.risk_score - shOrigSim.risk_score : null;
+                html += '<span class="sh-arrow">&#8594;</span>';
+                html += '<span class="sh-tag">Preview est.</span>' + shPillHTML(shEstSim, 'sh-est');
+                if (diff !== null) {
+                    const dc = diff < 0 ? 'better' : (diff > 0 ? 'worse' : 'same');
+                    const dl = diff < 0 ? `${diff} pts` : (diff > 0 ? `+${diff} pts` : 'same');
+                    html += `<span class="sh-delta ${dc}">${dl}</span>`;
+                }
+            }
+            if (shRescanSim) {
+                const refSim = shOrigSim || null;
+                const diff2 = refSim ? shRescanSim.risk_score - refSim.risk_score : null;
+                html += '<span class="sh-arrow">&#8594;</span>';
+                html += '<span class="sh-tag">Rescan</span>' + shPillHTML(shRescanSim, '');
+                if (diff2 !== null) {
+                    const dc2 = diff2 < 0 ? 'better' : (diff2 > 0 ? 'worse' : 'same');
+                    const dl2 = diff2 < 0 ? `▼ ${Math.abs(diff2)} pts` : (diff2 > 0 ? `▲ ${diff2} pts` : 'No change');
+                    html += `<span class="sh-delta ${dc2}">${dl2}</span>`;
+                }
+            }
+            row.innerHTML = html;
+            box.classList.remove('hidden');
+        }
+
+        // Annotated Threat Highlights
+        const THREAT_PATTERNS = [
+            // CRITICAL (Red)
+            { regex: /\bAKIA[0-9A-Z]{16}\b/gi, sev: 'CRITICAL', label: 'AWS Access Key Leak' },
+            { regex: /\bsk-[a-zA-Z0-9_\-]{20,}\b/gi, sev: 'CRITICAL', label: 'OpenAI Secret Key' },
+            { regex: /\bghp_[a-zA-Z0-9]{20,}\b/gi, sev: 'CRITICAL', label: 'GitHub Personal Access Token' },
+            { regex: /-----BEGIN (?:[A-Z ]+)?PRIVATE KEY-----[\s\S]*?-----END (?:[A-Z ]+)?PRIVATE KEY-----/gi, sev: 'CRITICAL', label: 'RSA Private Key Block' },
+            { regex: /\b(?:password\s*[:=]\s*['"]?[^\s'",]{4,}|Admin@123\w*|root\s+password)\b/gi, sev: 'CRITICAL', label: 'Plaintext Password' },
+            { regex: /\b(?:\d{4}[ -]?){3}\d{4}\b/g, sev: 'CRITICAL', label: 'Credit Card Number' },
+            { regex: /\b\d{3}-\d{2}-\d{4}\b/g, sev: 'CRITICAL', label: 'Social Security Number (SSN)' },
+            { regex: /\b\d{4}\s+\d{4}\s+\d{4}\b/g, sev: 'CRITICAL', label: 'Aadhaar Identification ID' },
+            { regex: /\b[A-Z]{5}[0-9]{4}[A-Z]\b/g, sev: 'CRITICAL', label: 'Income Tax PAN ID' },
+            { regex: /\b(?:kill\s+you|destroy\s+you|ruin\s+you|smash\s+your|make\s+you\s+pay|regret\s+this|hunt\s+you|break\s+your\s+neck|beat\s+you|slit\s+your|die\s+in\s+a|end\s+your\s+career)\b/gi, sev: 'CRITICAL', label: 'Violent Threat' },
+
+            // HIGH (Orange)
+            { regex: /\b(?:fuck|fucking|fucked|fucker|motherfucker|mf|wtf|stfu|bullshit|bitch|bastard|asshole|arsehole|dickhead|dipshit|jackass|douchebag|cunt|prick|wanker|twat|cocksucker|piss\s+off|fuck\s+off|fuck\s+you|screw\s+you|go\s+to\s+hell|eat\s+shit|idiot|moron|dumbass|dumb\s+ass|imbecile|retard|clown|scumbag|fool|incompetent|useless|pathetic|worthless|lazy|loser|you\s+suck|sucks|trash|brainless|disgrace|shut\s+up|shut\s+your\s+mouth|get\s+lost|chutiya|chutiye|bhenchod|behenchod|bc|madarchod|mc|harami|kamina|saala|saale|gandu|bakwas|kutta|gadha)\b/gi, sev: 'HIGH', label: 'Profanity / Hostile Insult' },
+            { regex: /\b(?:sue\s+you|take\s+you\s+to\s+court|see\s+you\s+in\s+court|hear\s+from\s+my\s+lawyer|take\s+legal\s+action|lawsuit|legal\s+notice)\b/gi, sev: 'HIGH', label: 'Legal Threat / Lawsuit' },
+            { regex: /\b(?:you(?:\s+are|\s*'re)?\s+fired|pack\s+your\s+things|employment\s+is\s+terminated|terminated\s+effective\s+immediately)\b/gi, sev: 'HIGH', label: 'Employment Termination' },
+            { regex: /\b(?:urgent\s+payment|immediate\s+wire|emergency\s+wire|send\s+gift\s+cards?|wire\s+\d+|wire\s+(?:the\s+)?money|transfer\s+(?:the\s+)?funds|wire\s+transfer|send\s+the\s+cash)\b/gi, sev: 'HIGH', label: 'Wire / Financial Pattern' },
+            { regex: /\b(?:revised\s+ctc|salary\s+sheet|bonus\s+card|\b\d+\s+lpa\b)\b/gi, sev: 'HIGH', label: 'Confidential Salary Data' },
+            { regex: /\b(?:mrn|medical\s+record|diagnosis|biopsy|chemotherapy)\b/gi, sev: 'HIGH', label: 'Protected Health Data (HIPAA)' },
+
+            // MEDIUM (Yellow)
+            { regex: /\b(?:crap|garbage|trash|stupid|horrible|disgusting|ridiculous|nonsense|rubbish|awful|terrible|clueless|annoying|waste\s+of\s+time|unacceptable)\b/gi, sev: 'MEDIUM', label: 'Hostile / Disparaging Language' },
+            { regex: /\b(?:strictly\s+confidential|covered\s+by\s+our\s+nda|internal\s+only\s+pricing|confidential\s+roadmap)\b/gi, sev: 'MEDIUM', label: 'Confidential Dissemination' },
+            { regex: /\b(?:damn|hell|heck|pissed|frustrated)\b/gi, sev: 'MEDIUM', label: 'Mild Frustration' }
+        ];
+
+        function extractPhrase(detail) {
+            if (!detail) return null;
+            const m = detail.match(/\('([^']+)'\)/);
+            if (m) return m[1];
+            const m2 = detail.match(/["“‘]([^"”’]{1,60})["”’]/);
+            if (m2) return m2[1];
+            return null;
+        }
+
+        function esc(str) {
+            return (str || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function buildAnnotatedPreview(bodyText, consequences) {
+            const wrap = document.getElementById('annot-wrap');
+            const annot = document.getElementById('annot-body');
+            const legend = document.getElementById('annot-legend');
+            if (!wrap || !annot) return;
+            if (!bodyText || bodyText.trim().length === 0) {
+                wrap.classList.add('hidden');
+                return;
+            }
+
+            const spans = [];
+
+            // 1. Scan known threat patterns directly on bodyText
+            THREAT_PATTERNS.forEach(rule => {
+                const re = new RegExp(rule.regex.source, rule.regex.flags);
+                let match;
+                while ((match = re.exec(bodyText)) !== null) {
+                    if (match[0].length > 0) {
+                        spans.push({
+                            s: match.index,
+                            e: match.index + match[0].length,
+                            sev: rule.sev,
+                            label: rule.label,
+                            text: match[0]
+                        });
+                    }
+                }
+            });
+
+            // 2. Extract any specific phrases passed from consequences
+            if (consequences && consequences.length > 0) {
+                const lower = bodyText.toLowerCase();
+                consequences.forEach(c => {
+                    const phrase = extractPhrase(c.detail);
+                    if (phrase) {
+                        const plower = phrase.toLowerCase();
+                        let p = lower.indexOf(plower);
+                        while (p !== -1) {
+                            spans.push({
+                                s: p,
+                                e: p + phrase.length,
+                                sev: c.severity || 'HIGH',
+                                label: c.summary || 'Detected Policy Concern',
+                                text: bodyText.slice(p, p + phrase.length)
+                            });
+                            p = lower.indexOf(plower, p + 1);
+                        }
+                    }
+                });
+            }
+
+            // 3. If no threat words found, cleanly hide the threat box
+            if (spans.length === 0) {
+                wrap.classList.add('hidden');
+                annot.innerHTML = '';
+                if (legend) legend.innerHTML = '';
+                return;
+            }
+
+            // 4. Sort and resolve overlapping highlights (prioritize higher severity)
+            const sevWeight = { 'CRITICAL': 3, 'HIGH': 2, 'MEDIUM': 1, 'SAFE': 0 };
+            spans.sort((a, b) => a.s - b.s || (sevWeight[b.sev] || 0) - (sevWeight[a.sev] || 0));
+
+            const filtered = [];
+            let lastEnd = -1;
+            spans.forEach(sp => {
+                if (sp.s >= lastEnd) {
+                    filtered.push(sp);
+                    lastEnd = sp.e;
+                }
+            });
+
+            // 5. Construct highlighted HTML
+            let result = '';
+            let ci = 0;
+            const len = bodyText.length;
+            filtered.forEach(sp => {
+                if (ci < sp.s) result += esc(bodyText.slice(ci, sp.s));
+                const cls = sp.sev === 'CRITICAL' ? 'hi-cr' : (sp.sev === 'HIGH' ? 'hi-hi' : 'hi-md');
+                result += `<mark class="${cls}" tabindex="0" title="${esc(sp.label)}: ${esc(sp.text)}">${esc(bodyText.slice(sp.s, sp.e))}</mark>`;
+                ci = sp.e;
+            });
+            if (ci < len) result += esc(bodyText.slice(ci));
+            annot.innerHTML = result;
+
+            // 6. Build legend
+            const sevSeen = {};
+            filtered.forEach(sp => { sevSeen[sp.sev] = true; });
+            let lhtml = '';
+            if (sevSeen['CRITICAL']) lhtml += '<span class="annot-key"><span class="annot-key-swatch" style="background:#fecaca;border:1.5px solid #dc2626"></span>Critical Threat</span>';
+            if (sevSeen['HIGH']) lhtml += '<span class="annot-key"><span class="annot-key-swatch" style="background:#ffedd5;border:1.5px solid #ea580c"></span>High Risk</span>';
+            if (sevSeen['MEDIUM']) lhtml += '<span class="annot-key"><span class="annot-key-swatch" style="background:#fef3c7;border:1.5px solid #d97706"></span>Medium Risk</span>';
+            if (legend) legend.innerHTML = lhtml ? '<span style="font-size:10px;color:#64748b;margin-right:0.25rem;font-weight:600">Detected Threats:</span>' + lhtml : '';
+
+            // Unhide the highlights box!
+            wrap.classList.remove('hidden');
+        }
+
+        function clearAnnotPreview() {
+            const wrap = document.getElementById('annot-wrap');
+            if (wrap) wrap.classList.add('hidden');
+            const annot = document.getElementById('annot-body');
+            if (annot) annot.innerHTML = '';
+        }
+
+        function markFieldsDirty() {
+            if (wfScanned && !wfScanDirty) {
+                wfScanDirty = true;
+                renderWfBar();
+                clearAnnotPreview();
+            }
+        }
+
+        // Initialize SVG Accordions
+        function initAccordions() {
+            document.querySelectorAll('.acc-item').forEach(item => {
+                const btn = item.querySelector('.acc-trigger');
+                if (!btn) return;
+                const panelId = btn.getAttribute('aria-controls');
+                const panel = document.getElementById(panelId);
+                if (!panel) return;
+
+                item.addEventListener('mouseenter', () => {
+                    btn.setAttribute('aria-expanded', 'true');
+                    panel.classList.add('open');
+                });
+                item.addEventListener('mouseleave', () => {
+                    btn.setAttribute('aria-expanded', 'false');
+                    panel.classList.remove('open');
+                });
+                btn.addEventListener('click', () => {
+                    const isOpen = panel.classList.contains('open');
+                    panel.classList.toggle('open');
+                    btn.setAttribute('aria-expanded', String(!isOpen));
+                });
+            });
+        }
+
+        // Handle "Send Anyway" / "Send with Override" from inside the Intervention Modal
+        function handleModalSendAnyway() {
+            closeV2Modal();
+            const chk = document.getElementById("confirm-checkbox");
+            if (chk) chk.checked = true;
+            toggleSendButton();
+            dispatchEmail();
+        }
+
+        // Commit and Dispatch Email (Sandboxed in Presentation Demo Mode by default)
+        async function dispatchEmail() {
+            if (!currentPreviewId) {
+                showBanner("Please run a safety scan before sending.", "error");
+                return;
+            }
+
+            const btn = document.getElementById("send-btn");
+            const spinner = document.getElementById("send-spinner");
+            const alertBox = document.getElementById("delivery-alert");
+
+            const recipient = document.getElementById("email-recipient").value.trim();
+            const subject = document.getElementById("email-subject").value.trim();
+            const content = document.getElementById("email-body").value.trim();
+            const override = document.getElementById("confirm-checkbox").checked;
+            const isLive = document.getElementById("live-smtp-toggle")?.checked || false;
+
+            // Explicit safety confirmation if user turned on Live SMTP
+            if (isLive) {
+                const confirmed = confirm(`⚡ ATTENTION: Live Gmail SMTP mode is active.\n\nDo you want to send a REAL email to:\n${recipient}?`);
+                if (!confirmed) {
+                    return;
+                }
+            }
+
+            btn.disabled = true;
+            spinner.classList.remove("hidden");
+            alertBox.classList.add("hidden");
+
+            try {
+                const res = await fetch("/api/send", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        preview_id: currentPreviewId,
+                        recipient,
+                        subject,
+                        content,
+                        user_override: override,
+                        force_live: isLive
+                    })
+                });
+                const data = await res.json();
+
+                alertBox.classList.remove("hidden");
+                if (data.status === "SENT") {
+                    const isSafeTier = (currentSimulation && currentSimulation.risk_score < 40);
+                    const isSandbox = (data.mode === "SANDBOX_SIMULATED");
+                    const borderBg = isSandbox ? "bg-emerald-50 border-emerald-300 text-emerald-900" : "bg-blue-50 border-blue-300 text-blue-900";
+                    alertBox.className = `p-4 rounded-xl border ${borderBg} text-xs space-y-2`;
+                    alertBox.innerHTML = `
+                        <div class="font-bold flex items-center justify-between">
+                            <span>${isSandbox ? '🛡️ Sandbox Verification & Audit Logged' : '✓ Live Email Dispatched via SMTP!'}</span>
+                            <span class="font-mono text-[10px] text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded">${data.receipt_id}</span>
+                        </div>
+                        <p class="text-[11px] leading-relaxed text-slate-700">${data.message}</p>
+                        ${isSafeTier ? `
+                        <div id="undo-container" class="flex items-center justify-between pt-1 border-t border-emerald-200">
+                            <span class="text-[11px] font-medium text-emerald-700">Tier SAFE: Sent to queue. <span id="undo-timer" class="font-bold">10s</span> to undo.</span>
+                            <button onclick="undoDispatch('${data.receipt_id}')" class="px-2.5 py-1 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white text-[10px] font-bold cursor-pointer">
+                                Undo Send
+                            </button>
+                        </div>` : ''}
+                    `;
+                    if (isSafeTier) startUndoTimer();
+                    showBanner(isSandbox ? "Sandboxed safely with audit receipt!" : "Live email sent via Gmail!", "success");
+                } else {
+                    alertBox.className = "p-4 rounded-xl bg-rose-50 border border-rose-300 text-xs text-rose-900 space-y-1";
+                    alertBox.innerHTML = `
+                        <div class="font-bold">✕ Dispatch Failed:</div>
+                        <p class="text-[11px] text-rose-800">${data.error || 'Recipient rejected.'}</p>
+                    `;
+                    showBanner("Failed to send: " + (data.error || "Recipient rejected"), "error");
+                }
+            } catch (err) {
+                alertBox.classList.remove("hidden");
+                alertBox.className = "p-4 rounded-xl bg-rose-50 border border-rose-300 text-xs text-rose-900";
+                alertBox.innerText = "Connection error. Ensure run.bat is open.";
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add("hidden");
+            }
+        }
+
+        function toggleSendButton() {
+            const confirmed = document.getElementById("confirm-checkbox").checked;
+            const btn = document.getElementById("send-btn");
+            const isLive = document.getElementById("live-smtp-toggle")?.checked || false;
+            const actionLabel = isLive ? "Send Live Email" : "Dispatch (Sandbox Mode)";
+
+            if (!currentSimulation) {
+                btn.disabled = true;
+                btn.className = "w-full py-3 px-4 rounded-xl font-bold text-xs bg-slate-200 text-slate-400 cursor-not-allowed transition shadow-sm";
+                btn.innerText = actionLabel;
+                return;
+            }
+
+            if (currentSimulation.risk_score >= 80) {
+                btn.disabled = true;
+                btn.className = "w-full py-3 px-4 rounded-xl font-bold text-xs bg-rose-100 text-rose-500 cursor-not-allowed transition shadow-sm border border-rose-200";
+                btn.innerText = `⛔ Hard Blocked: Score ${currentSimulation.risk_score}/100`;
+                return;
+            }
+
+            // In SAFE tier (0-39), confirmation checkbox is optional (Instant 1-click dispatch)
+            const canSend = (currentSimulation.risk_score < 40) 
+                ? (currentPreviewId && isRecipientValid) 
+                : (confirmed && currentPreviewId && isRecipientValid);
+
+            if (canSend) {
+                btn.disabled = false;
+                btn.className = "w-full py-3 px-4 rounded-xl font-bold text-xs bg-slate-900 hover:bg-slate-800 text-white transition shadow-sm cursor-pointer";
+                btn.innerText = (currentSimulation.risk_score < 40) 
+                    ? (isLive ? "Send Live Email (Instant Dispatch)" : "Dispatch (Sandbox Mode)") 
+                    : actionLabel;
+            } else {
+                btn.disabled = true;
+                btn.className = "w-full py-3 px-4 rounded-xl font-bold text-xs bg-slate-200 text-slate-400 cursor-not-allowed transition shadow-sm";
+                btn.innerText = actionLabel;
+            }
+        }
+
+        // Load 8 Sample Cases from Server
+        async function loadSampleCases() {
+            try {
+                const res = await fetch("/api/benchmark");
+                const data = await res.json();
+                sampleCases = data.cases || [];
+                renderSampleCases(sampleCases);
+            } catch (err) {
+                console.error("Failed to load sample cases:", err);
+            }
+        }
+
+        function renderSampleCases(cases) {
+            const grid = document.getElementById("testcases-grid");
+            grid.innerHTML = "";
+
+            const riskyCount = cases.filter(c => c.expected_risky || c.type === 'risky').length;
+            const safeCount = cases.filter(c => !c.expected_risky && c.type !== 'risky').length;
+            const riskyBadge = document.getElementById("badge-risky-count");
+            const safeBadge = document.getElementById("badge-safe-count");
+            if (riskyBadge) riskyBadge.innerText = `${riskyCount} Risky`;
+            if (safeBadge) safeBadge.innerText = `${safeCount} Safe`;
+
+            cases.forEach(c => {
+                const card = document.createElement("div");
+                const isRisky = c.expected_risky || c.type === 'risky';
+                const borderClass = isRisky ? "border-rose-200 bg-rose-50/20" : "border-emerald-200 bg-emerald-50/20";
+                const badgeClass = isRisky ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700";
+                const categoryChip = c.category_chip || c.category || (isRisky ? "RISKY" : "SAFE");
+
+                card.className = `p-4 rounded-xl border ${borderClass} flex flex-col justify-between space-y-3 hover:shadow-md transition bg-white`;
+                card.innerHTML = `
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${badgeClass}">${categoryChip}</span>
+                            <span class="text-[10px] font-mono text-slate-400 font-semibold">${c.id}</span>
+                        </div>
+                        <h4 class="text-xs font-bold text-slate-900">${c.title || c.id}</h4>
+                        <p class="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">${c.description}</p>
+                    </div>
+
+                    <button 
+                        onclick="useTestCase('${c.id}')"
+                        class="w-full py-2 px-3 rounded-lg border border-slate-300 hover:bg-slate-900 hover:text-white text-slate-700 font-semibold text-[11px] transition cursor-pointer"
+                    >
+                        Use This Test Case &rarr;
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function useTestCase(caseId) {
+            currentRewriteIteration = 0;
+            const c = sampleCases.find(item => item.id === caseId);
+            if (!c) return;
+
+            // Clear any saved original, comparison, and highlights so cases never mix
+            origSub = null;
+            origBody = null;
+            origSim = null;
+            document.getElementById("restb")?.classList.add("hidden");
+            clearComparison();
+            clearAnnotPreview();
+
+            // Reset workflow and score history
+            wfScanned = false;
+            wfScanDirty = false;
+            wfImproved = false;
+            wfRescanned = false;
+            shOrigSim = null;
+            shEstSim = null;
+            shRescanSim = null;
+            updateScoreHistory();
+            renderWfBar();
+
+            // Set the scenario's authentic recipient
+            const targetRecipient = c.target || c.recipient_hint || "colleague@gmail.com";
+            document.getElementById("email-recipient").value = targetRecipient;
+
+            document.getElementById("email-subject").value = c.subject || "";
+            document.getElementById("email-body").value = c.body || c.content || "";
+            document.getElementById("improvements-box").classList.add("hidden");
+            document.getElementById("delivery-alert").classList.add("hidden");
+            document.getElementById("score-reduction-pill")?.classList.add("hidden");
+
+            // Perform verification & scan smoothly
+            verifyRecipientEmail();
+            runSimulationScan();
+
+            // Smooth scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function scrollToBenchmark() {
+            document.getElementById("sample-cases-section").scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize on page load
+        window.addEventListener("DOMContentLoaded", () => {
+            loadSenderInfo();
+            loadSampleCases();
+            initAccordions();
+            renderWfBar();
+
+            // Wire dirty detection on subject and body fields
+            document.getElementById("email-subject")?.addEventListener("input", () => {
+                markFieldsDirty();
+                renderWfBar();
+            });
+            document.getElementById("email-body")?.addEventListener("input", () => {
+                markFieldsDirty();
+                renderWfBar();
+            });
+            document.getElementById("confirm-checkbox")?.addEventListener("change", () => {
+                renderWfBar();
+            });
+        });
+    </script>
+</body>
+</html>

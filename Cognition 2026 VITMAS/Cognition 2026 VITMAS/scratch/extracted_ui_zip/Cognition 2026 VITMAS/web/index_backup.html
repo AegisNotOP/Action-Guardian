@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ActionGuardian | AI Email Safety & Verification Gateway</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased min-h-screen selection:bg-slate-900 selection:text-white">
+
+    <!-- Top Professional Navigation Header -->
+    <header class="border-b border-slate-200 bg-white sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="w-9 h-9 rounded-lg bg-slate-900 text-white flex items-center justify-center font-bold text-sm shadow-sm">
+                    AG
+                </div>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-slate-900 tracking-tight text-sm sm:text-base">ActionGuardian</span>
+                        <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-slate-100 text-slate-600 border border-slate-200">Email Gateway</span>
+                    </div>
+                    <p class="text-[11px] text-slate-500 hidden sm:block">Pre-Action Threat Simulation & Verification (VITMAS Cognition 2026)</p>
+                </div>
+            </div>
+
+            <!-- Sender Status (Fixed from config.py) -->
+            <div class="flex items-center space-x-3">
+                <div class="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-200 text-xs">
+                    <span class="text-slate-400 font-medium">Configured Sender:</span>
+                    <span id="active-sender-display" class="font-semibold text-slate-700">Loading config...</span>
+                </div>
+                <button onclick="scrollToBenchmark()" class="text-xs px-3.5 py-1.5 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-semibold transition shadow-sm cursor-pointer">
+                    Sample Test Cases
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Workspace -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+
+        <!-- Global Inline Notification Banner (Never uses alert popups) -->
+        <div id="status-banner" class="hidden p-4 rounded-xl text-xs font-medium border transition-all"></div>
+
+        <!-- Header Summary Banner -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div class="space-y-1">
+                <h1 class="text-xl font-bold text-slate-900 tracking-tight">Simulated Consequences Before Real Email Dispatch</h1>
+                <p class="text-xs text-slate-600 max-w-2xl leading-relaxed">
+                    Once sent, high-stakes emails cannot be recalled. ActionGuardian automatically validates recipient genuineness, scans for credential leaks & toxic liability, and provides 1-click AI threat removal.
+                </p>
+            </div>
+            <div class="flex items-center gap-2.5 text-xs bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2">
+                <div class="w-2.5 h-2.5 rounded-full bg-emerald-500"></div>
+                <span class="text-slate-700 font-medium">Protection Gateway Active</span>
+            </div>
+        </div>
+
+        <!-- Two-Column Interactive Studio -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+            
+            <!-- Left Column: Email Composer (7 Cols) -->
+            <div class="lg:col-span-7 space-y-4">
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-md bg-slate-900 text-white text-xs font-bold flex items-center justify-center">1</span>
+                            <h2 class="text-sm font-bold text-slate-900">Email Composer</h2>
+                        </div>
+                        <span class="text-[11px] text-slate-400 font-medium">Step 1: Write & Check</span>
+                    </div>
+
+                    <!-- Recipient Email Input with Genuineness Verification -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="text-xs font-semibold text-slate-700">Recipient Email Address</label>
+                            <span id="genuineness-pill" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                                Not Verified
+                            </span>
+                        </div>
+                        <input 
+                            type="email" 
+                            id="email-recipient" 
+                            oninput="onRecipientInput()"
+                            placeholder="Enter genuine email (e.g. colleague@gmail.com)" 
+                            class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition"
+                        >
+                        <!-- Prominent Genuineness Status Message -->
+                        <div id="recipient-msg-box" class="hidden mt-2 p-2.5 rounded-xl text-xs font-medium border flex items-center gap-2"></div>
+                    </div>
+
+                    <!-- Subject Input -->
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Subject Line</label>
+                        <input 
+                            type="text" 
+                            id="email-subject" 
+                            placeholder="Subject line..." 
+                            class="w-full bg-white border border-slate-300 rounded-xl px-3.5 py-2 text-xs text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition"
+                        >
+                    </div>
+
+                    <!-- Body Content -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="text-xs font-semibold text-slate-700">Email Message Content</label>
+                            <span class="text-[11px] text-slate-400">Write text or select a sample case below</span>
+                        </div>
+                        <textarea 
+                            id="email-body" 
+                            rows="7" 
+                            placeholder="Type the email message here. ActionGuardian will inspect for passwords, credit cards, toxic words, and security risks..." 
+                            class="w-full bg-white border border-slate-300 rounded-xl p-3.5 text-xs font-mono text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-slate-900 transition leading-relaxed"
+                        ></textarea>
+                    </div>
+
+                    <!-- Action Controls -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
+                        <button 
+                            onclick="runSimulationScan()" 
+                            id="scan-btn"
+                            class="w-full py-2.5 px-4 rounded-xl font-semibold text-xs bg-slate-900 hover:bg-slate-800 text-white shadow-sm flex items-center justify-center gap-2 transition cursor-pointer"
+                        >
+                            <svg class="w-3.5 h-3.5 animate-spin hidden" id="scan-spinner" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                            <span>Simulate & Scan for Threats</span>
+                        </button>
+
+                        <button 
+                            onclick="autoImproveEmail()" 
+                            id="rewrite-btn"
+                            class="w-full py-2.5 px-4 rounded-xl font-semibold text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 shadow-sm flex items-center justify-center gap-2 transition cursor-pointer"
+                        >
+                            <svg class="w-3.5 h-3.5 animate-spin hidden" id="rewrite-spinner" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                            <span>✨ Auto-Improve & Rewrite with AI</span>
+                        </button>
+                    </div>
+
+                    <!-- AI Improvements Log Box -->
+                    <div id="improvements-box" class="hidden p-3.5 rounded-xl bg-indigo-50 border border-indigo-200 text-xs space-y-2">
+                        <div class="font-bold text-indigo-900 flex items-center gap-1.5">
+                            <span>✨ AI Improvements Applied:</span>
+                        </div>
+                        <ul id="improvements-list" class="list-disc list-inside space-y-1 text-indigo-800 text-[11px]"></ul>
+                    </div>
+
+                </div>
+            </div>
+
+            <!-- Right Column: Security Preview & Commit Gate (5 Cols) -->
+            <div class="lg:col-span-5 space-y-6">
+                
+                <!-- Inspection Card -->
+                <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-5">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-md bg-slate-900 text-white text-xs font-bold flex items-center justify-center">2</span>
+                            <h2 class="text-sm font-bold text-slate-900">Safety Inspection & Commit</h2>
+                        </div>
+                        <span class="text-[11px] text-slate-400 font-medium">Step 2: Review & Send</span>
+                    </div>
+
+                    <!-- Risk Gauge Meter -->
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <span class="text-[10px] font-bold uppercase tracking-wider text-slate-500">Predicted Risk Profile</span>
+                                <div class="text-lg font-black tracking-tight" id="risk-badge">AWAITING SCAN</div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-black font-mono" id="risk-score">--/100</div>
+                                <span class="text-[10px] text-slate-400">Risk Severity Score</span>
+                            </div>
+                        </div>
+                        <div class="w-full bg-slate-200 rounded-full h-2 overflow-hidden">
+                            <div id="risk-meter" class="h-2 rounded-full bg-slate-400 transition-all duration-300" style="width: 0%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Detected Threats / Consequences -->
+                    <div class="space-y-2">
+                        <label class="block text-xs font-semibold text-slate-700">Detected Threats & Liabilities</label>
+                        <div id="consequences-container" class="space-y-2 min-h-[90px]">
+                            <div class="p-4 rounded-xl border border-dashed border-slate-200 text-center text-xs text-slate-400">
+                                Click "Simulate & Scan for Threats" or select a sample case below to evaluate consequences.
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Commit Gate Section -->
+                    <div class="border-t border-slate-100 pt-4 space-y-3">
+                        <div class="flex items-start gap-2.5 p-3 rounded-xl bg-slate-50 border border-slate-200">
+                            <input type="checkbox" id="confirm-checkbox" onchange="toggleSendButton()" class="mt-0.5 rounded border-slate-300 text-slate-900 focus:ring-slate-900 cursor-pointer">
+                            <label for="confirm-checkbox" class="text-[11px] text-slate-600 leading-tight cursor-pointer">
+                                I confirm the recipient email address is genuine and authorize dispatching this email.
+                            </label>
+                        </div>
+
+                        <button 
+                            onclick="dispatchEmail()" 
+                            id="send-btn"
+                            disabled
+                            class="w-full py-3 px-4 rounded-xl font-bold text-xs bg-slate-200 text-slate-400 cursor-not-allowed transition shadow-sm flex items-center justify-center gap-2"
+                        >
+                            <svg class="w-4 h-4 animate-spin hidden" id="send-spinner" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg>
+                            <span>Send Real Email</span>
+                        </button>
+
+                        <!-- Delivery Status Alert -->
+                        <div id="delivery-alert" class="hidden p-3.5 rounded-xl text-xs space-y-1"></div>
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+        <!-- Curated Sample Test Cases Section -->
+        <section id="sample-cases-section" class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+                <div>
+                    <h3 class="text-sm font-bold text-slate-900">Curated Hackathon Test Scenarios</h3>
+                    <p class="text-xs text-slate-500">Select any scenario to load into the composer, test threat detection, and run 1-click AI improvement.</p>
+                </div>
+                <div class="flex items-center gap-2 text-xs">
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-rose-50 text-rose-700 font-semibold border border-rose-200">4 Risky</span>
+                    <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 font-semibold border border-emerald-200">4 Safe</span>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="testcases-grid">
+                <!-- Dynamically populated from /api/benchmark -->
+            </div>
+        </section>
+
+        <!-- Future Scope / Roadmap Section -->
+        <section class="bg-white border border-slate-200 rounded-2xl p-6 shadow-sm space-y-4">
+            <div class="border-b border-slate-100 pb-3">
+                <div class="flex items-center gap-2">
+                    <span class="text-base font-bold text-slate-900">🚀 Future Scope & Architectural Extensions</span>
+                    <span class="text-[10px] font-semibold uppercase tracking-wider px-2 py-0.5 rounded bg-indigo-50 text-indigo-700 border border-indigo-200">Roadmap</span>
+                </div>
+                <p class="text-xs text-slate-500 mt-1">Domains planned for production rollout beyond email:</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                    <div class="flex items-center gap-2 font-bold text-slate-900">
+                        <span class="p-1 rounded bg-slate-200">💳</span>
+                        <span>Financial Transactions & Payment Gateway</span>
+                    </div>
+                    <p class="text-slate-600 leading-relaxed text-[11px]">
+                        Since third-party payment gateways (Stripe, Razorpay) require verified merchant KYC and live banking credentials, automated fund transfers are designed as an architectural future scope. The dry-run sandbox will simulate multi-signature approvals for payments exceeding $1,000 before dispatching webhooks to live payment rails.
+                    </p>
+                </div>
+
+                <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                    <div class="flex items-center gap-2 font-bold text-slate-900">
+                        <span class="p-1 rounded bg-slate-200">🐳</span>
+                        <span>Docker Shadow Sandbox for Code Deployment</span>
+                    </div>
+                    <p class="text-slate-600 leading-relaxed text-[11px]">
+                        Simulating destructive Linux/SQL commands (`DROP TABLE`, `rm -rf`) inside real disposable Docker containers before executing against production cloud databases. If the containerized service crashes, the commit gate automatically aborts real-world deployment.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Application Script (Zero browser alert popups) -->
+    <script>
+        let currentPreviewId = null;
+        let currentSimulation = null;
+        let isRecipientValid = false;
+        let sampleCases = [];
+        let verifyTimeout = null;
+
+        // Show Clean Inline Status Banner
+        function showBanner(message, type = "info") {
+            const banner = document.getElementById("status-banner");
+            banner.classList.remove("hidden", "bg-rose-50", "border-rose-200", "text-rose-800", "bg-emerald-50", "border-emerald-200", "text-emerald-800", "bg-blue-50", "border-blue-200", "text-blue-800");
+
+            if (type === "error") {
+                banner.classList.add("bg-rose-50", "border-rose-200", "text-rose-800");
+            } else if (type === "success") {
+                banner.classList.add("bg-emerald-50", "border-emerald-200", "text-emerald-800");
+            } else {
+                banner.classList.add("bg-blue-50", "border-blue-200", "text-blue-800");
+            }
+
+            banner.innerHTML = message;
+            setTimeout(() => {
+                banner.classList.add("hidden");
+            }, 6000);
+        }
+
+        // Load Configured Sender info from config.py
+        async function loadSenderInfo() {
+            try {
+                const res = await fetch("/api/sender");
+                const data = await res.json();
+                document.getElementById("active-sender-display").innerText = data.sender_email;
+            } catch (err) {
+                document.getElementById("active-sender-display").innerText = "Fixed in config.py";
+            }
+        }
+
+        // Real-Time Recipient Email Genuineness Verification
+        function onRecipientInput() {
+            clearTimeout(verifyTimeout);
+            verifyTimeout = setTimeout(() => {
+                verifyRecipientEmail();
+            }, 500);
+        }
+
+        async function verifyRecipientEmail() {
+            const email = document.getElementById("email-recipient").value.trim();
+            const pill = document.getElementById("genuineness-pill");
+            const msgBox = document.getElementById("recipient-msg-box");
+
+            if (!email) {
+                pill.className = "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200";
+                pill.innerText = "Not Verified";
+                msgBox.classList.add("hidden");
+                isRecipientValid = false;
+                toggleSendButton();
+                return;
+            }
+
+            pill.className = "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 border border-amber-200";
+            pill.innerText = "Verifying DNS...";
+
+            try {
+                const res = await fetch("/api/verify_email", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ email })
+                });
+                const data = await res.json();
+
+                if (data.is_valid && data.domain_exists) {
+                    pill.className = "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200";
+                    pill.innerText = "✓ Valid & DNS Verified";
+                    msgBox.className = "mt-2 p-2.5 rounded-xl text-xs font-medium border bg-emerald-50 border-emerald-200 text-emerald-800 flex items-center gap-2";
+                    msgBox.innerHTML = `<span>✓</span><span><b>Email Domain Verified:</b> ${data.message}</span>`;
+                    msgBox.classList.remove("hidden");
+                    isRecipientValid = true;
+                } else {
+                    pill.className = "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200";
+                    pill.innerText = "✕ No Such Email Exists";
+                    msgBox.className = "mt-2 p-2.5 rounded-xl text-xs font-medium border bg-rose-50 border-rose-200 text-rose-800 flex items-center gap-2";
+                    msgBox.innerHTML = `<span>✕</span><span><b>No such email exists:</b> ${data.error}</span>`;
+                    msgBox.classList.remove("hidden");
+                    isRecipientValid = false;
+                }
+            } catch (err) {
+                pill.className = "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200";
+                pill.innerText = "Verification Offline";
+                isRecipientValid = false;
+            }
+            toggleSendButton();
+        }
+
+        // Threat Simulation Scan
+        async function runSimulationScan() {
+            const btn = document.getElementById("scan-btn");
+            const spinner = document.getElementById("scan-spinner");
+            btn.disabled = true;
+            spinner.classList.remove("hidden");
+
+            const target = document.getElementById("email-recipient").value.trim();
+            const subject = document.getElementById("email-subject").value.trim();
+            const content = document.getElementById("email-body").value.trim();
+
+            if (!target) {
+                showBanner("Please enter a recipient email address to scan.", "error");
+                btn.disabled = false;
+                spinner.classList.add("hidden");
+                return;
+            }
+
+            try {
+                const res = await fetch("/api/preview", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        domain: "EMAIL",
+                        target: target,
+                        subject: subject,
+                        content: content
+                    })
+                });
+                const data = await res.json();
+                renderSimulation(data);
+            } catch (err) {
+                showBanner("Could not connect to simulation server. Please make sure run.bat is open.", "error");
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add("hidden");
+            }
+        }
+
+        function renderSimulation(data) {
+            const sim = data.simulation;
+            currentPreviewId = data.preview_id;
+            currentSimulation = sim;
+
+            // Update Score & Gauge
+            document.getElementById("risk-score").innerText = `${sim.risk_score}/100`;
+            const badge = document.getElementById("risk-badge");
+            badge.innerText = sim.risk_level;
+
+            const meter = document.getElementById("risk-meter");
+            meter.style.width = `${sim.risk_score}%`;
+
+            if (sim.risk_score >= 80) {
+                badge.className = "text-lg font-black text-rose-600 tracking-tight";
+                meter.className = "h-2 rounded-full bg-rose-600";
+            } else if (sim.risk_score >= 50) {
+                badge.className = "text-lg font-black text-amber-600 tracking-tight";
+                meter.className = "h-2 rounded-full bg-amber-500";
+            } else if (sim.risk_score >= 25) {
+                badge.className = "text-lg font-black text-yellow-600 tracking-tight";
+                meter.className = "h-2 rounded-full bg-yellow-500";
+            } else {
+                badge.className = "text-lg font-black text-emerald-600 tracking-tight";
+                meter.className = "h-2 rounded-full bg-emerald-500";
+            }
+
+            // Threats container
+            const container = document.getElementById("consequences-container");
+            container.innerHTML = "";
+
+            if (sim.consequences.length === 0) {
+                container.innerHTML = `
+                    <div class="p-3.5 rounded-xl bg-emerald-50 border border-emerald-200 text-xs text-emerald-800 flex items-center gap-2">
+                        <span class="text-base">✓</span>
+                        <span><b>Clean & Safe:</b> No credentials, payment cards, hostile language, or phishing links detected.</span>
+                    </div>`;
+            } else {
+                sim.consequences.forEach(c => {
+                    const item = document.createElement("div");
+                    item.className = "p-3 rounded-xl bg-rose-50/70 border border-rose-200 space-y-1 text-xs";
+                    item.innerHTML = `
+                        <div class="flex items-center justify-between font-bold text-rose-900">
+                            <span>${c.summary}</span>
+                            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-rose-200 text-rose-800 font-bold">${c.severity}</span>
+                        </div>
+                        <p class="text-slate-600 text-[11px] leading-relaxed">${c.detail}</p>
+                    `;
+                    container.appendChild(item);
+                });
+            }
+
+            toggleSendButton();
+        }
+
+        // Auto-Improve Email with AI
+        async function autoImproveEmail() {
+            const btn = document.getElementById("rewrite-btn");
+            const spinner = document.getElementById("rewrite-spinner");
+            btn.disabled = true;
+            spinner.classList.remove("hidden");
+
+            const target = document.getElementById("email-recipient").value.trim();
+            const subject = document.getElementById("email-subject").value.trim();
+            const content = document.getElementById("email-body").value.trim();
+
+            try {
+                const res = await fetch("/api/rewrite", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ target, subject, content })
+                });
+                const data = await res.json();
+
+                // Update text areas with cleaned content
+                document.getElementById("email-body").value = data.remediated_content;
+                if (data.remediated_subject) {
+                    document.getElementById("email-subject").value = data.remediated_subject;
+                }
+
+                // Show changes box
+                const box = document.getElementById("improvements-box");
+                const list = document.getElementById("improvements-list");
+                list.innerHTML = "";
+
+                if (data.changes && data.changes.length > 0) {
+                    data.changes.forEach(ch => {
+                        const li = document.createElement("li");
+                        li.innerText = ch;
+                        list.appendChild(li);
+                    });
+                    box.classList.remove("hidden");
+                } else {
+                    box.classList.add("hidden");
+                }
+
+                // Render clean preview result
+                if (data.clean_preview) {
+                    renderSimulation(data.clean_preview);
+                }
+
+                showBanner("✨ AI has sanitized credentials and toned down threats. Score updated!", "success");
+
+            } catch (err) {
+                showBanner("Could not auto-improve email: Server unavailable.", "error");
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add("hidden");
+            }
+        }
+
+        // Commit and Dispatch Real Email
+        async function dispatchEmail() {
+            if (!currentPreviewId) {
+                showBanner("Please run a safety scan before sending.", "error");
+                return;
+            }
+
+            const btn = document.getElementById("send-btn");
+            const spinner = document.getElementById("send-spinner");
+            const alertBox = document.getElementById("delivery-alert");
+
+            btn.disabled = true;
+            spinner.classList.remove("hidden");
+            alertBox.classList.add("hidden");
+
+            const recipient = document.getElementById("email-recipient").value.trim();
+            const subject = document.getElementById("email-subject").value.trim();
+            const content = document.getElementById("email-body").value.trim();
+            const override = document.getElementById("confirm-checkbox").checked;
+
+            try {
+                const res = await fetch("/api/send", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        preview_id: currentPreviewId,
+                        recipient,
+                        subject,
+                        content,
+                        user_override: override
+                    })
+                });
+                const data = await res.json();
+
+                alertBox.classList.remove("hidden");
+                if (data.status === "SENT") {
+                    alertBox.className = "p-4 rounded-xl bg-emerald-50 border border-emerald-300 text-xs text-emerald-900 space-y-1";
+                    alertBox.innerHTML = `
+                        <div class="font-bold flex items-center justify-between">
+                            <span>✓ Email Successfully Dispatched!</span>
+                            <span class="font-mono text-[10px] text-emerald-700">${data.receipt_id}</span>
+                        </div>
+                        <p class="text-[11px] leading-relaxed text-emerald-800">${data.message}</p>
+                    `;
+                    showBanner("Email dispatched successfully with audit receipt!", "success");
+                } else {
+                    alertBox.className = "p-4 rounded-xl bg-rose-50 border border-rose-300 text-xs text-rose-900 space-y-1";
+                    alertBox.innerHTML = `
+                        <div class="font-bold">✕ Dispatch Failed:</div>
+                        <p class="text-[11px] text-rose-800">${data.error || 'Recipient rejected.'}</p>
+                    `;
+                    showBanner("Failed to send: " + (data.error || "Recipient rejected"), "error");
+                }
+            } catch (err) {
+                alertBox.classList.remove("hidden");
+                alertBox.className = "p-4 rounded-xl bg-rose-50 border border-rose-300 text-xs text-rose-900";
+                alertBox.innerText = "Connection error. Ensure run.bat is open.";
+            } finally {
+                btn.disabled = false;
+                spinner.classList.add("hidden");
+            }
+        }
+
+        function toggleSendButton() {
+            const confirmed = document.getElementById("confirm-checkbox").checked;
+            const btn = document.getElementById("send-btn");
+
+            if (confirmed && currentPreviewId && isRecipientValid) {
+                btn.disabled = false;
+                btn.className = "w-full py-3 px-4 rounded-xl font-bold text-xs bg-slate-900 hover:bg-slate-800 text-white transition shadow-sm cursor-pointer";
+            } else {
+                btn.disabled = true;
+                btn.className = "w-full py-3 px-4 rounded-xl font-bold text-xs bg-slate-200 text-slate-400 cursor-not-allowed transition shadow-sm";
+            }
+        }
+
+        // Load 8 Sample Cases from Server
+        async function loadSampleCases() {
+            try {
+                const res = await fetch("/api/benchmark");
+                const data = await res.json();
+                sampleCases = data.cases || [];
+                renderSampleCases(sampleCases);
+            } catch (err) {
+                console.error("Failed to load sample cases:", err);
+            }
+        }
+
+        function renderSampleCases(cases) {
+            const grid = document.getElementById("testcases-grid");
+            grid.innerHTML = "";
+
+            cases.forEach(c => {
+                const card = document.createElement("div");
+                const isRisky = c.expected_risky;
+                const borderClass = isRisky ? "border-rose-200 bg-rose-50/20" : "border-emerald-200 bg-emerald-50/20";
+                const badgeClass = isRisky ? "bg-rose-100 text-rose-700" : "bg-emerald-100 text-emerald-700";
+
+                card.className = `p-4 rounded-xl border ${borderClass} flex flex-col justify-between space-y-3 hover:shadow-md transition bg-white`;
+                card.innerHTML = `
+                    <div class="space-y-1.5">
+                        <div class="flex items-center justify-between">
+                            <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded ${badgeClass}">${c.category}</span>
+                            <span class="text-[10px] font-mono text-slate-400">${c.id}</span>
+                        </div>
+                        <h4 class="text-xs font-bold text-slate-900">${c.title || c.id}</h4>
+                        <p class="text-[11px] text-slate-500 line-clamp-2 leading-relaxed">${c.description}</p>
+                    </div>
+
+                    <button 
+                        onclick="useTestCase('${c.id}')"
+                        class="w-full py-2 px-3 rounded-lg border border-slate-300 hover:bg-slate-900 hover:text-white text-slate-700 font-semibold text-[11px] transition cursor-pointer"
+                    >
+                        Use This Test Case &rarr;
+                    </button>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function useTestCase(caseId) {
+            const c = sampleCases.find(item => item.id === caseId);
+            if (!c) return;
+
+            document.getElementById("email-recipient").value = c.target || "colleague@gmail.com";
+            document.getElementById("email-subject").value = c.subject || "";
+            document.getElementById("email-body").value = c.content || "";
+            document.getElementById("improvements-box").classList.add("hidden");
+            document.getElementById("delivery-alert").classList.add("hidden");
+
+            // Perform verification & scan smoothly
+            verifyRecipientEmail();
+            runSimulationScan();
+
+            // Smooth scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function scrollToBenchmark() {
+            document.getElementById("sample-cases-section").scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // Initialize on page load
+        window.addEventListener("DOMContentLoaded", () => {
+            loadSenderInfo();
+            loadSampleCases();
+        });
+    </script>
+</body>
+</html>

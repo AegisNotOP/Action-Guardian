@@ -1,0 +1,1248 @@
+"""Generates the redesigned index.html for PREVIEW - Cognition Risk Engine."""
+import os
+
+HEAD = """<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PREVIEW - Cognition Risk Engine | VITMAS 2026</title>
+<meta name="description" content="PREVIEW: Pre-Action Verification and Simulation Gateway. Local demo - VITMAS Cognition 2026.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --n50:#f4f4f2;--n100:#e8e8e5;--n200:#d2d1cd;--n300:#b8b7b1;--n400:#9e9d96;
+  --n500:#87867f;--n600:#6f6e68;--n700:#585752;--n800:#3e3d3a;--n900:#242320;--n950:#141412;
+  --s50:#faf8f4;--s100:#f3efe8;--s200:#e7e0d4;--s300:#d6cbbf;--s400:#c0b09f;
+  --s500:#a89480;--s600:#8e7a67;--s700:#73604f;--s800:#574839;
+  --ivory:#f9f7f3;
+  --safe-bg:#eef4ee;--safe-bd:#b8d4b8;--safe-tx:#2d5c2d;
+  --low-bg:#f4f1e8;--low-bd:#c8bc90;--low-tx:#6b5c1e;
+  --med-bg:#f5eddf;--med-bd:#c9a55e;--med-tx:#7a4e10;
+  --hi-bg:#f2e8e1;--hi-bd:#c0876a;--hi-tx:#7a3a18;
+  --crit-bg:#f0e4e2;--crit-bd:#b87068;--crit-tx:#6d2820;
+  --amber:#b8883a;--rust:#a04030;--rust-m:#c85840;
+  --surf:#fff;--bd:var(--n200);--bds:var(--n100);
+  --tx:var(--n900);--tx2:var(--n600);--tx3:var(--n400);
+  --tf:120ms ease;--ts:200ms ease;--tsl:350ms ease;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:14px}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+body{font-family:Inter,-apple-system,BlinkMacSystemFont,sans-serif;background:var(--n100);color:var(--tx);line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh}
+::selection{background:var(--n800);color:var(--ivory)}
+
+/* ---- NAV ---- */
+#nav{position:sticky;top:0;z-index:60;background:var(--n900);border-bottom:1px solid var(--n800)}
+.ni{max-width:1200px;margin:0 auto;padding:0 1.25rem;height:52px;display:flex;align-items:center;justify-content:space-between;gap:1rem}
+.nb{display:flex;align-items:center;gap:.65rem;flex-shrink:0}
+.nl{width:30px;height:30px;border-radius:6px;background:var(--s500);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:10px;color:var(--n950);letter-spacing:.03em}
+.nt{font-weight:600;font-size:13px;color:var(--n100);letter-spacing:-.01em}
+.ns{font-size:10px;color:var(--n400)}
+.nps{display:flex;align-items:center;gap:2px}
+.np{font-size:10px;font-weight:500;color:var(--n400);padding:3px 10px;border-radius:20px;cursor:pointer;border:none;background:transparent;transition:color var(--tf),background var(--tf);font-family:inherit}
+.np:hover{color:var(--n100);background:var(--n800)}
+.np.active{color:var(--s300);background:var(--n800)}
+.nr{display:flex;align-items:center;gap:.5rem;flex-shrink:0}
+.db{font-size:9px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;color:var(--s400);border:1px solid var(--n700);padding:2px 8px;border-radius:3px}
+.nsd{font-size:10px;color:var(--n400);display:none}
+@media(min-width:768px){.nsd{display:block}}
+@media(max-width:679px){.nps{display:none}}
+
+/* ---- LAYOUT ---- */
+#pg{max-width:1200px;margin:0 auto;padding:1.5rem 1.25rem calc(4rem + 42px + env(safe-area-inset-bottom,0px))}
+
+/* ---- SECTION ---- */
+.sb{margin-bottom:2rem;opacity:0;transform:translateY(12px);transition:opacity var(--tsl),transform var(--tsl)}
+.sb.vis{opacity:1;transform:none}
+.sl{display:flex;align-items:center;gap:.5rem;margin-bottom:.75rem}
+.sn{width:20px;height:20px;border-radius:50%;background:var(--s600);color:var(--s100);font-size:9px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sh{font-size:10.5px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--s700)}
+.sdv{flex:1;height:1px;background:var(--s200)}
+
+/* ---- CARD ---- */
+.card{background:var(--surf);border:1px solid var(--bd);border-radius:10px;overflow:hidden}
+.ch{padding:1rem 1.25rem;border-bottom:1px solid var(--bds);display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.5rem}
+.ct{font-size:13px;font-weight:700;color:var(--n800);letter-spacing:-.015em}
+.cm{font-size:10px;color:var(--n400);font-weight:500;letter-spacing:.01em}
+.cb{padding:1.25rem}
+
+/* ---- OVERVIEW ---- */
+.ov{background:var(--n900);border:1px solid var(--n800);border-radius:10px;padding:1.25rem 1.5rem;display:flex;flex-direction:column;gap:1rem}
+@media(min-width:768px){.ov{flex-direction:row;align-items:center;justify-content:space-between}}
+.ov h1{font-size:16px;font-weight:700;color:var(--n50);letter-spacing:-.02em;line-height:1.3}
+.ov p{font-size:11px;color:var(--n400);margin-top:.3rem;max-width:560px;line-height:1.65}
+.ovst{display:flex;align-items:center;gap:.5rem;flex-shrink:0}
+.dot{width:7px;height:7px;border-radius:50%;background:#4a9a6a;flex-shrink:0}
+.ovst span{font-size:11px;color:var(--n400);font-weight:500}
+
+/* ---- BANNER ---- */
+#bnr{display:none;padding:.65rem 1rem;border-radius:7px;font-size:11px;font-weight:500;border:1px solid;margin-top:.75rem;line-height:1.5}
+#bnr.inf{background:var(--n50);border-color:var(--bd);color:var(--n700)}
+#bnr.ok{background:var(--safe-bg);border-color:var(--safe-bd);color:var(--safe-tx)}
+#bnr.err{background:var(--crit-bg);border-color:var(--crit-bd);color:var(--crit-tx)}
+
+/* ---- COMPOSER GRID ---- */
+.cg{display:grid;grid-template-columns:1fr;gap:1.25rem}
+@media(min-width:960px){.cg{grid-template-columns:1fr 380px}}
+
+/* ---- FORM ---- */
+.fl{display:block;font-size:11px;font-weight:600;color:var(--s700);margin-bottom:.4rem;letter-spacing:.02em}
+.fr{display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem}
+.fi{width:100%;background:var(--surf);border:1px solid var(--n300);border-radius:7px;padding:.55rem .85rem;font-size:12px;font-family:inherit;color:var(--tx);outline:none;transition:border-color var(--tf),box-shadow var(--tf)}
+.fi:focus{border-color:var(--n600);box-shadow:0 0 0 3px rgba(135,134,127,.15)}
+.fi::placeholder{color:var(--n300)}
+.fta{resize:vertical;min-height:130px;font-family:'JetBrains Mono','Courier New',monospace;font-size:11.5px;line-height:1.7}
+.fsp{margin-bottom:1rem}
+
+/* ---- VERIFY PILL ---- */
+.vp{font-size:9.5px;font-weight:600;padding:2px 8px;border-radius:20px;border:1px solid var(--bd);background:var(--n50);color:var(--tx3);white-space:nowrap;letter-spacing:.02em}
+.vp.vfy{background:var(--low-bg);border-color:var(--low-bd);color:var(--low-tx)}
+.vp.ok{background:var(--safe-bg);border-color:var(--safe-bd);color:var(--safe-tx)}
+.vp.bad{background:var(--crit-bg);border-color:var(--crit-bd);color:var(--crit-tx)}
+.rm{display:none;margin-top:.5rem;padding:.5rem .75rem;border-radius:6px;font-size:11px;font-weight:500;border:1px solid;align-items:flex-start;gap:.5rem}
+.rm.show{display:flex}
+.rm.ok{background:var(--safe-bg);border-color:var(--safe-bd);color:var(--safe-tx)}
+.rm.bad{background:var(--crit-bg);border-color:var(--crit-bd);color:var(--crit-tx)}
+
+/* ---- BUTTONS ---- */
+.brow{display:flex;flex-direction:column;gap:.5rem;margin-top:1rem}
+.brow-main{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;padding:.6rem 1rem;border-radius:7px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;border:1px solid transparent;transition:background var(--tf),color var(--tf),border-color var(--tf);white-space:nowrap;outline:none}
+.btn:focus-visible{box-shadow:0 0 0 3px rgba(135,134,127,.3)}
+.btn:disabled{opacity:.45;cursor:not-allowed}
+.btn-p{background:var(--n900);color:var(--n100);border-color:var(--n800)}
+.btn-p:not(:disabled):hover{background:var(--n800)}
+.btn-s{background:var(--s100);color:var(--s800);border-color:var(--s300)}
+.btn-s:not(:disabled):hover{background:var(--s200)}
+#restb{display:none}
+.btn-r{background:var(--rust);color:var(--ivory);border-color:var(--rust)}
+.btn-r:not(:disabled):hover{background:var(--rust-m);border-color:var(--rust-m)}
+.bsend{width:100%;padding:.75rem 1rem;font-size:12.5px;display:inline-flex;align-items:center;justify-content:center;gap:.4rem;border-radius:7px;font-weight:600;font-family:inherit;outline:none;border:1px solid;transition:background var(--tf),color var(--tf),border-color var(--tf);background:var(--n200);color:var(--n400);border-color:var(--n200);cursor:not-allowed}
+.bsend.on{background:var(--n900);color:var(--ivory);border-color:var(--n800);cursor:pointer}
+.bsend.on:hover{background:var(--n800)}
+.spin{width:12px;height:12px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .7s linear infinite;display:none;flex-shrink:0}
+@keyframes sp{to{transform:rotate(360deg)}}
+
+
+/* ---- RISK GAUGE ---- */
+.rg{padding:1rem 1.25rem;background:var(--n50);border-bottom:1px solid var(--bds)}
+.rgh{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:.75rem}
+.rlt{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--s600);display:block;margin-bottom:.3rem}
+#rbadge{font-size:16px;font-weight:700;color:var(--n700);letter-spacing:-.02em;line-height:1.2}
+#rscore{font-family:'JetBrains Mono',monospace;font-size:24px;font-weight:500;color:var(--n800);text-align:right;letter-spacing:-.02em}
+.rsub{font-size:9px;color:var(--n400);text-align:right;display:block;letter-spacing:.03em;text-transform:uppercase;font-weight:600;margin-top:2px}
+.rbar{width:100%;height:6px;background:var(--n200);border-radius:3px;overflow:hidden}
+#rmeter{height:100%;border-radius:3px;background:var(--n400);width:0%;transition:width .4s ease,background .3s ease}
+
+/* ---- THREATS ---- */
+.tw{padding:1rem 1.25rem}
+.tt{font-size:10px;font-weight:700;color:var(--s700);margin-bottom:.6rem;letter-spacing:.06em;text-transform:uppercase}
+#cc{min-height:80px}
+.te{padding:1.25rem;border:1px dashed var(--n200);border-radius:7px;text-align:center;font-size:11px;color:var(--tx3);line-height:1.6}
+.ti{padding:.75rem;border-radius:7px;margin-bottom:.5rem;border:1px solid}
+.ti.cr{background:var(--crit-bg);border-color:var(--crit-bd)}
+.ti.hi{background:var(--hi-bg);border-color:var(--hi-bd)}
+.ti.md{background:var(--med-bg);border-color:var(--med-bd)}
+.tih{display:flex;align-items:center;justify-content:space-between;margin-bottom:.3rem}
+.tis{font-size:11px;font-weight:600;line-height:1.4}
+.ti.cr .tis{color:var(--crit-tx)}.ti.hi .tis{color:var(--hi-tx)}.ti.md .tis{color:var(--med-tx)}
+.tsev{font-size:8.5px;font-weight:700;font-family:'JetBrains Mono',monospace;letter-spacing:.06em;padding:2px 7px;border-radius:3px;background:var(--n800);color:var(--n100);text-transform:uppercase}
+.tid{font-size:10.5px;color:var(--tx2);line-height:1.6}
+.tsafe{padding:.75rem 1rem;background:var(--safe-bg);border:1px solid var(--safe-bd);border-radius:7px;display:flex;align-items:flex-start;gap:.5rem;font-size:11px}
+.tsafe .sic{font-size:14px;line-height:1;flex-shrink:0;margin-top:1px}
+.tsafe .stx{color:var(--safe-tx);line-height:1.55}
+.tsafe .stx strong{font-weight:600}
+
+/* ---- COMMIT GATE ---- */
+.cw{padding:1rem 1.25rem;background:var(--n50);border-top:1px solid var(--bds)}
+.crow{display:flex;align-items:flex-start;gap:.6rem;padding:.65rem .85rem;border-radius:7px;background:var(--surf);border:1px solid var(--bd);margin-bottom:.75rem}
+.crow input{margin-top:2px;width:14px;height:14px;flex-shrink:0;accent-color:var(--n800);cursor:pointer}
+.crow label{font-size:10.5px;color:var(--tx2);line-height:1.55;cursor:pointer}
+#dal{display:none;margin-top:.75rem;padding:.75rem 1rem;border-radius:7px;border:1px solid;font-size:11px}
+#dal.ok{background:var(--safe-bg);border-color:var(--safe-bd);color:var(--safe-tx)}
+#dal.bad{background:var(--crit-bg);border-color:var(--crit-bd);color:var(--crit-tx)}
+
+/* ---- SCENARIOS ---- */
+.sg{display:grid;grid-template-columns:1fr;gap:.75rem}
+@media(min-width:600px){.sg{grid-template-columns:1fr 1fr}}
+@media(min-width:960px){.sg{grid-template-columns:repeat(4,1fr)}}
+.sc{background:var(--surf);border:1px solid var(--bd);border-radius:9px;padding:.9rem 1rem;display:flex;flex-direction:column;justify-content:space-between;gap:.75rem;transition:border-color var(--ts),box-shadow var(--ts)}
+.sc:hover{border-color:var(--n400);box-shadow:0 2px 8px rgba(36,35,32,.08)}
+.sc.rk{border-left:3px solid var(--rust-m)}.sc.sf{border-left:3px solid #4a9a6a}
+.sbg{display:inline-flex;align-items:center;font-size:9px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:3px}
+.sbg.rk{background:var(--crit-bg);color:var(--crit-tx)}.sbg.sf{background:var(--safe-bg);color:var(--safe-tx)}
+.sid{font-size:9px;font-family:'JetBrains Mono',monospace;color:var(--tx3)}
+.stl{font-size:12px;font-weight:600;color:var(--tx);line-height:1.35;margin-top:.3rem}
+.sds{font-size:10.5px;color:var(--tx3);line-height:1.55;margin-top:.2rem}
+.buse{width:100%;padding:.5rem .75rem;font-size:11px;font-weight:600;background:var(--n50);border:1px solid var(--bd);border-radius:6px;color:var(--tx2);cursor:pointer;font-family:inherit;transition:background var(--tf),border-color var(--tf),color var(--tf)}
+.buse:hover{background:var(--n900);border-color:var(--n900);color:var(--ivory)}
+
+/* ---- ACCORDION (Future Scope) ---- */
+.acc{display:flex;flex-direction:row;gap:1rem;contain:layout}
+@media(max-width:599px){.acc{flex-direction:column}}
+.acc-item{flex:1;min-width:0;border:1px solid var(--s200);border-radius:9px;overflow:hidden;background:var(--surf);transition:border-color var(--ts),box-shadow var(--ts)}
+.acc-item:hover{border-color:var(--s400);box-shadow:0 3px 12px rgba(36,35,32,.09)}
+.acc-trigger{width:100%;background:transparent;border:none;padding:.9rem 1.1rem;display:flex;align-items:center;gap:.75rem;cursor:pointer;text-align:left;font-family:inherit;transition:background var(--tf);outline:none}
+.acc-trigger:focus-visible{box-shadow:inset 0 0 0 2px var(--n600)}
+.acc-item:hover .acc-trigger,.acc-trigger[aria-expanded="true"]{background:var(--s50)}
+.acc-icon{width:32px;height:32px;border-radius:7px;background:var(--s200);display:flex;align-items:center;justify-content:center;flex-shrink:0;color:var(--s700);transition:background var(--tf)}
+.acc-item:hover .acc-icon,.acc-trigger[aria-expanded="true"] .acc-icon{background:var(--s300)}
+.acc-icon svg{width:16px;height:16px;stroke:currentColor;stroke-width:1.8;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.acc-th{flex:1;min-width:0}
+.acc-tag{display:block;font-size:9px;font-weight:600;letter-spacing:.06em;text-transform:uppercase;padding:2px 7px;border-radius:3px;background:var(--s200);color:var(--s700);margin-bottom:.3rem;width:fit-content}
+.acc-title{font-size:12px;font-weight:600;color:var(--tx);line-height:1.35}
+.acc-chevron{width:16px;height:16px;flex-shrink:0;color:var(--tx3);transition:transform .25s ease}
+.acc-chevron svg{width:16px;height:16px;stroke:currentColor;stroke-width:2;fill:none;stroke-linecap:round;stroke-linejoin:round}
+.acc-item:hover .acc-chevron,.acc-trigger[aria-expanded="true"] .acc-chevron{transform:rotate(180deg)}
+.acc-panel{overflow:hidden;max-height:0;transition:max-height .3s ease}
+.acc-item:hover .acc-panel,.acc-panel.open{max-height:500px}
+.acc-body{padding:.05rem 1.1rem 1rem calc(32px + .75rem + 1.1rem);font-size:10.5px;color:var(--tx2);line-height:1.7}
+.acc-body .mono{font-family:'JetBrains Mono',monospace;font-size:9.5px;background:var(--n100);padding:1px 5px;border-radius:3px;color:var(--n700)}
+
+/* ---- COMPARISON PANEL ---- */
+#cmpbox{display:none;margin-top:1rem}
+.cmp-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:.65rem}
+.cmp-title{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--s700)}
+.cmp-grid{display:grid;grid-template-columns:1fr;gap:.75rem;min-width:0}
+@media(min-width:700px){.cmp-grid{grid-template-columns:1fr 160px 1fr}}
+.cmp-side{background:var(--surf);border:1px solid var(--bd);border-radius:8px;overflow:hidden}
+.cmp-side-hd{padding:.6rem .85rem;border-bottom:1px solid var(--bds);display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.cmp-lbl{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--tx3)}
+.cmp-score-pill{display:inline-flex;align-items:center;gap:.3rem;font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:4px;border:1px solid}
+.cmp-body{padding:.65rem .85rem;display:flex;flex-direction:column;gap:.5rem}
+.cmp-field-lbl{font-size:9px;font-weight:600;color:var(--tx3);letter-spacing:.04em;text-transform:uppercase;margin-bottom:2px}
+.cmp-field{font-size:11px;color:var(--tx);line-height:1.6;white-space:pre-wrap;word-break:break-word;background:var(--n50);border:1px solid var(--n100);border-radius:5px;padding:.45rem .65rem;min-height:2.2rem}
+.cmp-field.subj{font-weight:600;min-height:auto}
+.cmp-ch{background:var(--surf);border:1px solid var(--bd);border-radius:8px;padding:.65rem .85rem;display:flex;flex-direction:column;gap:.4rem;min-width:0;overflow-wrap:anywhere;word-break:break-word}
+.cmp-ch-title{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--s700);margin-bottom:.1rem}
+.cmp-ch-item{font-size:10px;color:var(--tx2);line-height:1.55;padding-left:.75rem;position:relative;overflow-wrap:anywhere;word-break:break-word}
+.cmp-ch-item::before{content:'';position:absolute;left:0;top:.55em;width:4px;height:4px;border-radius:50%;background:var(--s400)}
+.cmp-delta{display:flex;align-items:center;justify-content:center;gap:.3rem;padding:.45rem .5rem;border-radius:5px;font-size:10px;font-weight:600;border:1px solid}
+.cmp-delta.better{background:var(--safe-bg);border-color:var(--safe-bd);color:var(--safe-tx)}
+.cmp-delta.worse{background:var(--crit-bg);border-color:var(--crit-bd);color:var(--crit-tx)}
+.cmp-delta.same{background:var(--n50);border-color:var(--n200);color:var(--tx2)}
+@media(max-width:699px){.cmp-ch{order:3}}
+.bc{display:inline-flex;align-items:center;font-size:10px;font-weight:600;padding:2px 8px;border-radius:4px}
+.bc-r{background:var(--crit-bg);color:var(--crit-tx);border:1px solid var(--crit-bd)}
+.bc-s{background:var(--safe-bg);color:var(--safe-tx);border:1px solid var(--safe-bd)}
+.mono{font-family:'JetBrains Mono',monospace}
+footer{position:fixed;bottom:0;left:0;right:0;z-index:50;background:var(--n900);border-top:1px solid var(--n800);padding:.85rem 1.25rem calc(.85rem + env(safe-area-inset-bottom,0px));text-align:center;font-size:10px;color:var(--n500);letter-spacing:.02em}
+footer strong{color:var(--n400);font-weight:600}
+
+/* ---- WORKFLOW BAR ---- */
+#wfbar{display:flex;align-items:center;gap:0;margin-bottom:1.1rem;background:var(--surf);border:1px solid var(--bd);border-radius:9px;padding:.65rem 1rem;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.wf-step{display:flex;align-items:center;gap:0;flex-shrink:0}
+.wf-dot{width:22px;height:22px;border-radius:50%;border:2px solid var(--n300);background:var(--surf);display:flex;align-items:center;justify-content:center;font-size:8.5px;font-weight:700;color:var(--tx3);transition:border-color var(--ts),background var(--ts),color var(--ts);flex-shrink:0}
+.wf-lbl{font-size:9.5px;font-weight:600;color:var(--tx3);margin-left:.35rem;white-space:nowrap;transition:color var(--ts)}
+.wf-conn{flex:1;min-width:14px;max-width:32px;height:2px;background:var(--n200);margin:0 .25rem;border-radius:1px;transition:background var(--ts);flex-shrink:0}
+.wf-step.done .wf-dot{border-color:var(--safe-bd);background:var(--safe-bg);color:var(--safe-tx)}
+.wf-step.done .wf-lbl{color:var(--safe-tx)}
+.wf-step.done+.wf-conn{background:var(--safe-bd)}
+.wf-step.current .wf-dot{border-color:var(--s600);background:var(--s100);color:var(--s700)}
+.wf-step.current .wf-lbl{color:var(--s700);font-weight:700}
+.wf-step.stale .wf-dot{border-color:var(--med-bd);background:var(--med-bg);color:var(--med-tx)}
+.wf-step.stale .wf-lbl{color:var(--med-tx)}
+
+/* ---- SCORE HISTORY ---- */
+#score-hist{display:none;padding:.6rem 1.25rem .7rem;border-bottom:1px solid var(--bds);background:var(--n50)}
+.sh-row{display:flex;align-items:center;gap:.4rem;flex-wrap:wrap}
+.sh-tag{font-size:8.5px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--tx3);flex-shrink:0}
+.sh-pill{display:inline-flex;align-items:center;gap:.25rem;font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;padding:2px 7px;border-radius:4px;border:1px solid;white-space:nowrap}
+.sh-arrow{font-size:10px;color:var(--tx3)}
+.sh-est{opacity:.75}
+.sh-delta{font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px;border:1px solid}
+.sh-delta.better{background:var(--safe-bg);border-color:var(--safe-bd);color:var(--safe-tx)}
+.sh-delta.worse{background:var(--crit-bg);border-color:var(--crit-bd);color:var(--crit-tx)}
+.sh-delta.same{background:var(--n50);border-color:var(--n200);color:var(--tx2)}
+
+/* ---- ANNOTATED PREVIEW ---- */
+#annot-wrap{display:none;margin-top:.65rem;border:1px solid var(--n200);border-radius:7px;overflow:hidden}
+.annot-hd{padding:.4rem .75rem;background:var(--n50);border-bottom:1px solid var(--n200);display:flex;align-items:center;justify-content:space-between;gap:.5rem}
+.annot-hd-lbl{font-size:9px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--tx3)}
+.annot-hd-note{font-size:9px;color:var(--tx3);font-style:italic}
+#annot-body{font-family:'JetBrains Mono','Courier New',monospace;font-size:11px;line-height:1.75;padding:.65rem .85rem;color:var(--tx);white-space:pre-wrap;word-break:break-word;background:var(--surf);max-height:220px;overflow-y:auto}
+.hi-cr{background:#f9d6d4;border-bottom:2px solid #b87068;border-radius:2px;padding:0 1px;cursor:pointer}
+.hi-hi{background:#f7e9de;border-bottom:2px solid #c0876a;border-radius:2px;padding:0 1px;cursor:pointer}
+.hi-md{background:#f7f0de;border-bottom:2px solid #c9a55e;border-radius:2px;padding:0 1px;cursor:pointer}
+.hi-cr:focus,.hi-hi:focus,.hi-md:focus{outline:2px solid var(--n600);outline-offset:1px}
+.annot-legend{padding:.35rem .75rem;background:var(--n50);border-top:1px solid var(--n200);display:flex;gap:.75rem;flex-wrap:wrap}
+.annot-key{display:flex;align-items:center;gap:.3rem;font-size:9px;color:var(--tx3)}
+.annot-key-swatch{width:10px;height:10px;border-radius:2px;flex-shrink:0}
+</style>
+</head>
+<body>
+"""
+
+BODY = """
+<nav id="nav" role="navigation" aria-label="Section navigation">
+  <div class="ni">
+    <div class="nb">
+      <div class="nl" aria-hidden="true">RX</div>
+      <div>
+        <div class="nt">PREVIEW &ndash; Risk Engine</div>
+        <div class="ns">VITMAS Cognition 2026</div>
+      </div>
+    </div>
+    <div class="nps" role="list" aria-label="Page sections">
+      <button class="np active" data-s="s1" onclick="goSec('s1')" aria-label="Overview">Overview</button>
+      <button class="np" data-s="s2" onclick="goSec('s2')" aria-label="Action Review">Review</button>
+      <button class="np" data-s="s3" onclick="goSec('s3')" aria-label="Test Scenarios">Scenarios</button>
+      <button class="np" data-s="s4" onclick="goSec('s4')" aria-label="Roadmap">Roadmap</button>
+    </div>
+    <div class="nr">
+      <span class="db">Local Demo</span>
+      <span class="nsd" id="sdr"></span>
+    </div>
+  </div>
+</nav>
+
+<main id="pg" role="main">
+
+  <!-- 1: OVERVIEW -->
+  <section id="s1" class="sb" aria-labelledby="h1">
+    <div class="sl">
+      <div class="sn" aria-hidden="true">1</div>
+      <h2 class="sh" id="h1">System Overview</h2>
+      <div class="sdv" aria-hidden="true"></div>
+    </div>
+    <div class="ov">
+      <div>
+        <h1>PREVIEW &ndash; Cognition Risk Engine</h1>
+        <p>Intercepts high-stakes AI agent actions before irreversible dispatch. Validates recipient DNS, scans for credential leaks and policy violations, and enables 1-click safe rewriting. Requires human confirmation before any commit.</p>
+      </div>
+      <div class="ovst" role="status" aria-live="polite">
+        <div class="dot" aria-label="System active"></div>
+        <span>Simulation Gateway Active</span>
+      </div>
+    </div>
+    <div id="bnr" role="alert" aria-live="assertive"></div>
+  </section>
+
+  <!-- 2: ACTION REVIEW -->
+  <section id="s2" class="sb" aria-labelledby="h2">
+    <div class="sl">
+      <div class="sn" aria-hidden="true">2</div>
+      <h2 class="sh" id="h2">Action Review</h2>
+      <div class="sdv" aria-hidden="true"></div>
+    </div>
+    <!-- Workflow progress bar -->
+    <div id="wfbar" role="list" aria-label="Review workflow progress">
+      <div class="wf-step" id="wf0" role="listitem" aria-label="Step: Compose"><div class="wf-dot" aria-hidden="true">&#10003;</div><span class="wf-lbl">Compose</span></div>
+      <div class="wf-conn" aria-hidden="true"></div>
+      <div class="wf-step" id="wf1" role="listitem" aria-label="Step: Scan"><div class="wf-dot" aria-hidden="true">2</div><span class="wf-lbl">Scan</span></div>
+      <div class="wf-conn" aria-hidden="true"></div>
+      <div class="wf-step" id="wf2" role="listitem" aria-label="Step: Review"><div class="wf-dot" aria-hidden="true">3</div><span class="wf-lbl">Review</span></div>
+      <div class="wf-conn" aria-hidden="true"></div>
+      <div class="wf-step" id="wf3" role="listitem" aria-label="Step: Improve"><div class="wf-dot" aria-hidden="true">4</div><span class="wf-lbl">Improve</span></div>
+      <div class="wf-conn" aria-hidden="true"></div>
+      <div class="wf-step" id="wf4" role="listitem" aria-label="Step: Rescan"><div class="wf-dot" aria-hidden="true">5</div><span class="wf-lbl">Rescan</span></div>
+      <div class="wf-conn" aria-hidden="true"></div>
+      <div class="wf-step" id="wf5" role="listitem" aria-label="Step: Confirm"><div class="wf-dot" aria-hidden="true">6</div><span class="wf-lbl">Confirm</span></div>
+    </div>
+    <div class="cg">
+
+      <!-- LEFT: Composer -->
+      <div class="card">
+        <div class="ch">
+          <span class="ct">Compose Action</span>
+          <span class="cm">Step 1 of 2 &mdash; Draft &amp; verify</span>
+        </div>
+        <div class="cb">
+          <div class="fsp">
+            <div class="fr">
+              <label class="fl" for="er">Recipient Email</label>
+              <span id="vp" class="vp" aria-live="polite">Not Verified</span>
+            </div>
+            <input type="email" id="er" name="email-recipient" autocomplete="email"
+              placeholder="e.g. colleague@gmail.com" class="fi"
+              oninput="onRI()" aria-describedby="rmsg">
+            <div id="rmsg" class="rm" role="status" aria-live="polite"></div>
+          </div>
+          <div class="fsp">
+            <label class="fl" for="es">Subject Line</label>
+            <input type="text" id="es" name="email-subject" placeholder="Subject..." class="fi">
+          </div>
+          <div class="fsp">
+            <div class="fr">
+              <label class="fl" for="eb">Message Content</label>
+              <span style="font-size:10px;color:var(--tx3)">Monospace</span>
+            </div>
+            <textarea id="eb" name="email-body" rows="8"
+              placeholder="Write email body here. PREVIEW inspects for credential leaks, abusive language, PII, and phishing patterns before allowing dispatch."
+              class="fi fta"></textarea>
+            <!-- Annotated preview appears here after scan with findings -->
+            <div id="annot-wrap" aria-label="Annotated body preview — highlights correspond to detected findings">
+              <div class="annot-hd">
+                <span class="annot-hd-lbl">Annotated Preview</span>
+                <span class="annot-hd-note">Edit in the field above &mdash; highlights show detected issues</span>
+              </div>
+              <div id="annot-body" aria-live="polite"></div>
+              <div class="annot-legend" id="annot-legend"></div>
+            </div>
+          </div>
+          <div class="brow">
+            <div class="brow-main">
+              <button id="scanb" class="btn btn-p" onclick="doScan()" aria-label="Simulate and scan for threats">
+                <span class="spin" id="scansp" aria-hidden="true"></span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+                <span>Simulate &amp; Scan</span>
+              </button>
+              <button id="rwb" class="btn btn-s" onclick="doRewrite()" aria-label="Auto-improve and rewrite unsafe content">
+                <span class="spin" id="rwsp" aria-hidden="true"></span>
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg>
+                <span>Auto-Improve</span>
+              </button>
+            </div>
+            <button id="restb" class="btn btn-r" onclick="doRestore()" aria-label="Restore the original email from before the AI rewrite">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/><path d="M3 3v5h5"/></svg>
+              Restore original (before AI rewrite)
+            </button>
+          </div>
+          <div id="cmpbox" aria-label="Before and after comparison" aria-live="polite">
+            <div class="cmp-hd">
+              <span class="cmp-title">Before &amp; After</span>
+            </div>
+            <div class="cmp-grid">
+              <div class="cmp-side" id="cmp-orig">
+                <div class="cmp-side-hd">
+                  <span class="cmp-lbl">Original</span>
+                  <span class="cmp-score-pill" id="cmp-orig-pill"></span>
+                </div>
+                <div class="cmp-body">
+                  <div>
+                    <div class="cmp-field-lbl">Subject</div>
+                    <div class="cmp-field subj" id="cmp-orig-sub"></div>
+                  </div>
+                  <div>
+                    <div class="cmp-field-lbl">Body</div>
+                    <div class="cmp-field" id="cmp-orig-body"></div>
+                  </div>
+                </div>
+              </div>
+              <div class="cmp-ch" id="cmp-changes">
+                <div class="cmp-ch-title">Changes</div>
+                <div id="cmp-ch-list"></div>
+                <div id="cmp-delta" class="cmp-delta same" style="margin-top:auto"></div>
+              </div>
+              <div class="cmp-side" id="cmp-new">
+                <div class="cmp-side-hd">
+                  <span class="cmp-lbl">AI-Rewritten</span>
+                  <span class="cmp-score-pill" id="cmp-new-pill"></span>
+                </div>
+                <div class="cmp-body">
+                  <div>
+                    <div class="cmp-field-lbl">Subject</div>
+                    <div class="cmp-field subj" id="cmp-new-sub"></div>
+                  </div>
+                  <div>
+                    <div class="cmp-field-lbl">Body</div>
+                    <div class="cmp-field" id="cmp-new-body"></div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: Safety + Commit -->
+      <div class="card" style="display:flex;flex-direction:column">
+        <div class="ch">
+          <span class="ct">Safety Inspection</span>
+          <span class="cm">Step 2 of 2 &mdash; Review &amp; commit</span>
+        </div>
+        <div class="rg">
+          <div class="rgh">
+            <div>
+              <span class="rlt">Predicted Risk Profile</span>
+              <div id="rbadge" aria-live="polite" aria-label="Risk level">Awaiting Scan</div>
+            </div>
+            <div>
+              <div id="rscore" class="mono" aria-live="polite" aria-label="Risk score">--/100</div>
+              <span class="rsub" id="rscore-lbl">Risk Score</span>
+            </div>
+          </div>
+          <div class="rbar" role="progressbar" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100" aria-label="Risk severity meter">
+            <div id="rmeter"></div>
+          </div>
+        </div>
+        <!-- Score history: shown once at least two readings exist -->
+        <div id="score-hist" aria-live="polite" aria-label="Score history">
+          <div class="sh-row" id="sh-row"></div>
+        </div>
+        <div class="tw" style="flex:1">
+          <div class="tt">Detected Threats &amp; Liabilities</div>
+          <div id="cc">
+            <div class="te">Click <strong>Simulate &amp; Scan</strong> to evaluate this action, or load a scenario below.</div>
+          </div>
+        </div>
+        <div class="cw">
+          <div class="crow">
+            <input type="checkbox" id="ckb" onchange="toggleSend()" aria-describedby="ckl">
+            <label for="ckb" id="ckl">I confirm the recipient address is genuine and I authorise dispatching this action.</label>
+          </div>
+          <button id="sendb" class="bsend" disabled onclick="doSend()" aria-label="Send email (requires scan and confirmation)">
+            <span class="spin" id="sendsp" aria-hidden="true"></span>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
+            <span>Send Email</span>
+          </button>
+          <div id="dal" role="alert" aria-live="assertive"></div>
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- 3: TEST SCENARIOS -->
+  <section id="s3" class="sb" aria-labelledby="h3">
+    <div class="sl">
+      <div class="sn" aria-hidden="true">3</div>
+      <h2 class="sh" id="h3">Test Scenarios</h2>
+      <div class="sdv" aria-hidden="true"></div>
+    </div>
+    <div class="card">
+      <div class="ch">
+        <div>
+          <div class="ct">Benchmark Cases</div>
+          <div style="font-size:10.5px;color:var(--tx3);margin-top:2px">Load a scenario to test detection, auto-improve, and the commit gate</div>
+        </div>
+        <div style="display:flex;gap:.4rem">
+          <span class="bc bc-r" id="rcnt">4 Risky</span>
+          <span class="bc bc-s" id="scnt">4 Safe</span>
+        </div>
+      </div>
+      <div class="cb" style="padding-top:1rem">
+        <div class="sg" id="tcg">
+          <div class="te" style="grid-column:1/-1">Loading scenarios from server&hellip;</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 4: ROADMAP -->
+  <section id="s4" class="sb" aria-labelledby="h4">
+    <div class="sl">
+      <div class="sn" aria-hidden="true">4</div>
+      <h2 class="sh" id="h4">Future Scope</h2>
+      <div class="sdv" aria-hidden="true"></div>
+    </div>
+    <div class="card">
+      <div class="ch">
+        <div>
+          <div class="ct">Architectural Extensions</div>
+          <div style="font-size:10.5px;color:var(--tx3);margin-top:2px">Domains planned for production rollout beyond email</div>
+        </div>
+        <span class="bc" style="background:var(--n50);color:var(--tx2);border:1px solid var(--bd)">Roadmap</span>
+      </div>
+      <div class="cb">
+        <div class="acc" role="list">
+
+          <!-- Item 1: Financial Transactions -->
+          <div class="acc-item" role="listitem">
+            <button class="acc-trigger"
+                id="acc-btn-1"
+                aria-expanded="false"
+                aria-controls="acc-panel-1">
+              <span class="acc-icon" aria-hidden="true">
+                <!-- credit-card icon -->
+                <svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+              </span>
+              <span class="acc-th">
+                <span class="acc-tag">Planned</span>
+                <span class="acc-title">Financial Transactions &amp; Payment Gateway</span>
+              </span>
+              <span class="acc-chevron" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+              </span>
+            </button>
+            <div class="acc-panel"
+                 id="acc-panel-1"
+                 role="region"
+                 aria-labelledby="acc-btn-1">
+              <div class="acc-body">
+                Third-party payment gateways (Stripe, Razorpay) require verified merchant KYC and live banking credentials. The dry-run sandbox will simulate multi-signature approvals for payments exceeding $1,000 before dispatching webhooks to live payment rails.
+              </div>
+            </div>
+          </div>
+
+          <!-- Item 2: Docker Shadow Sandbox -->
+          <div class="acc-item" role="listitem">
+            <button class="acc-trigger"
+                id="acc-btn-2"
+                aria-expanded="false"
+                aria-controls="acc-panel-2">
+              <span class="acc-icon" aria-hidden="true">
+                <!-- box/container icon -->
+                <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+              </span>
+              <span class="acc-th">
+                <span class="acc-tag">Planned</span>
+                <span class="acc-title">Docker Shadow Sandbox for Code Deployment</span>
+              </span>
+              <span class="acc-chevron" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+              </span>
+            </button>
+            <div class="acc-panel"
+                 id="acc-panel-2"
+                 role="region"
+                 aria-labelledby="acc-btn-2">
+              <div class="acc-body">
+                Simulating destructive commands (<span class="mono">DROP TABLE</span>, <span class="mono">rm -rf</span>) inside real disposable Docker containers before executing against production databases. If the service crashes, the commit gate automatically aborts real-world deployment.
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer role="contentinfo">
+  <strong>Local Demo Only</strong> &mdash; PREVIEW runs entirely on your machine. No data is transmitted externally. This is a simulation sandbox for VITMAS Cognition 2026 and does not constitute production security software.
+</footer>
+"""
+
+SCRIPT = """
+<script>
+'use strict';
+var prevId=null,prevSim=null,recipOk=false,cases=[],vtimer=null,origSub=null,origBody=null,origSim=null;
+// Workflow state
+var wfScanned=false,wfScanDirty=false,wfImproved=false,wfRescanned=false;
+// Score history state
+var shOrigSim=null,shEstSim=null,shRescanSim=null;
+
+function goSec(id){
+  var el=document.getElementById(id);
+  if(!el)return;
+  var nh=document.getElementById('nav').offsetHeight+12;
+  window.scrollTo({top:el.getBoundingClientRect().top+window.pageYOffset-nh,behavior:'smooth'});
+}
+
+function updatePills(){
+  var ids=['s1','s2','s3','s4'];
+  var nh=document.getElementById('nav').offsetHeight;
+  var cur=ids[0];
+  ids.forEach(function(id){
+    var el=document.getElementById(id);
+    if(el&&el.getBoundingClientRect().top-nh-40<=0)cur=id;
+  });
+  document.querySelectorAll('.np').forEach(function(b){
+    b.classList.toggle('active',b.dataset.s===cur);
+  });
+}
+
+(function(){
+  var ob=new IntersectionObserver(function(es){
+    es.forEach(function(e){
+      if(e.isIntersecting){e.target.classList.add('vis');ob.unobserve(e.target);}
+    });
+  },{threshold:0.08});
+  document.querySelectorAll('.sb').forEach(function(s){ob.observe(s);});
+})();
+
+window.addEventListener('scroll',updatePills,{passive:true});
+
+function banner(msg,type){
+  var b=document.getElementById('bnr');
+  b.className=type;b.style.display='block';b.innerHTML=msg;
+  clearTimeout(b._t);
+  b._t=setTimeout(function(){b.style.display='none';},7000);
+}
+
+async function loadSender(){
+  try{
+    var r=await fetch('/api/sender');
+    var d=await r.json();
+    var el=document.getElementById('sdr');
+    if(el)el.textContent='Sender: '+d.sender_email;
+  }catch(e){}
+}
+
+function onRI(){clearTimeout(vtimer);vtimer=setTimeout(verifyR,500);}
+
+async function verifyR(){
+  var email=document.getElementById('er').value.trim();
+  var pill=document.getElementById('vp');
+  var msg=document.getElementById('rmsg');
+  if(!email){
+    pill.className='vp';pill.textContent='Not Verified';
+    msg.className='rm';recipOk=false;toggleSend();return;
+  }
+  pill.className='vp vfy';pill.textContent='Checking DNS\u2026';
+  try{
+    var r=await fetch('/api/verify_email',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify({email:email})});
+    var d=await r.json();
+    if(d.is_valid&&d.domain_exists){
+      pill.className='vp ok';pill.textContent='\\u2713 DNS Verified';
+      msg.className='rm ok show';
+      msg.innerHTML='<span>\\u2713</span><span><strong>Domain verified:</strong> '+d.message+'</span>';
+      recipOk=true;
+    }else{
+      pill.className='vp bad';pill.textContent='\\u2717 Domain Not Found';
+      msg.className='rm bad show';
+      msg.innerHTML='<span>\\u2717</span><span><strong>No such domain:</strong> '+(d.error||'Lookup failed.')+'</span>';
+      recipOk=false;
+    }
+  }catch(e){pill.className='vp';pill.textContent='Offline';recipOk=false;}
+  toggleSend();
+}
+
+async function doScan(){
+  var btn=document.getElementById('scanb'),sp=document.getElementById('scansp');
+  btn.disabled=true;sp.style.display='block';
+  var tgt=document.getElementById('er').value.trim();
+  var sub=document.getElementById('es').value.trim();
+  var body=document.getElementById('eb').value.trim();
+  if(!tgt){banner('Enter a recipient email address before scanning.','err');btn.disabled=false;sp.style.display='none';return;}
+  try{
+    var r=await fetch('/api/preview',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({domain:'EMAIL',target:tgt,subject:sub,content:body})});
+    var d=await r.json();
+    var isRescan=wfScanned&&wfImproved;
+    renderSim(d);
+    // Score history
+    if(!shOrigSim){shOrigSim=d.simulation;}  // first scan of this draft
+    if(isRescan){shRescanSim=d.simulation;}  // scan after improve
+    updateScoreHistory();
+    // Annotated preview
+    buildAnnotatedPreview(body,d.simulation.consequences||[]);
+    // Workflow
+    wfScanned=true;wfScanDirty=false;
+    if(isRescan)wfRescanned=true;
+    renderWfBar();
+  }catch(e){banner('Cannot reach server. Make sure the Python server is running.','err');}
+  finally{btn.disabled=false;sp.style.display='none';}
+}
+
+function riskColor(score,t){
+  var c={bar:['#4a9a6a','#b8883a','#c87830','#c85840','#a04030'],
+         tx:['#2d5c2d','#6b5c1e','#7a4e10','#7a3a18','#6d2820']};
+  var p=c[t];
+  if(score<10)return p[0];if(score<25)return p[1];if(score<50)return p[2];if(score<80)return p[3];return p[4];
+}
+
+// Format snake-case API risk labels into reader-friendly display strings.
+// The original API value is never mutated, only what is shown in the UI.
+function fmtRisk(raw){
+  if(!raw)return'Awaiting Scan';
+  var map={'SAFE':'Safe','LOW_RISK':'Low Risk','MEDIUM_RISK':'Medium Risk',
+           'HIGH_RISK':'High Risk','CRITICAL_RISK':'Critical Risk',
+           'LOW':'Low Risk','MEDIUM':'Medium Risk','HIGH':'High Risk','CRITICAL':'Critical Risk'};
+  return map[raw]||raw.split('_').map(function(w){return w.charAt(0).toUpperCase()+w.slice(1).toLowerCase();}).join(' ');
+}
+
+// Format severity constants to title-case for badge display.
+function fmtSev(raw){
+  if(!raw)return'';
+  var map={'CRITICAL':'Critical','HIGH':'High','MEDIUM':'Medium','LOW':'Low','INFO':'Info'};
+  return map[raw]||raw.charAt(0)+raw.slice(1).toLowerCase();
+}
+
+function renderSim(data){
+  var sim=data.simulation;prevId=data.preview_id;prevSim=sim;
+  var score=sim.risk_score;
+  document.getElementById('rscore').textContent=score+'/100';
+  var badge=document.getElementById('rbadge');
+  badge.textContent=fmtRisk(sim.risk_level);badge.style.color=riskColor(score,'tx');
+  var meter=document.getElementById('rmeter');
+  meter.style.width=score+'%';meter.style.background=riskColor(score,'bar');
+  document.querySelector('.rbar').setAttribute('aria-valuenow',score);
+  // Score source label on the gauge
+  var scanLbl=document.getElementById('rscore-lbl');
+  if(scanLbl){
+    if(wfImproved&&(wfScanned||wfRescanned)){scanLbl.textContent='Rescan Result';}
+    else{scanLbl.textContent='Risk Score';}
+  }
+  var cc=document.getElementById('cc');cc.innerHTML='';
+  if(!sim.consequences||sim.consequences.length===0){
+    var s=document.createElement('div');s.className='tsafe';
+    s.innerHTML='<span class="sic">\\u2713</span><span class="stx"><strong>Clean &amp; Clear:</strong> No credentials, PII, hostile language, or phishing patterns detected.</span>';
+    cc.appendChild(s);
+  }else{
+    sim.consequences.forEach(function(c,idx){
+      var sv=c.severity==='CRITICAL'?'cr':(c.severity==='HIGH'?'hi':'md');
+      var it=document.createElement('div');it.className='ti '+sv;
+      it.setAttribute('data-cidx',idx);
+      it.style.cursor='pointer';
+      it.title='Click to focus this finding in the annotated preview';
+      it.innerHTML='<div class="tih"><span class="tis">'+c.summary+'</span><span class="tsev">'+fmtSev(c.severity)+'</span></div><p class="tid">'+c.detail+'</p>';
+      it.addEventListener('click',function(){focusAnnotMark(idx);});
+      cc.appendChild(it);
+    });
+  }
+  toggleSend();
+}
+
+async function doRewrite(){
+  // Snapshot the EXACT current field values as the very first action —
+  // before any DOM writes, before the await, before btn.disabled.
+  // These are the values that will appear in the "Original Email" panel.
+  var snapSub=document.getElementById('es').value;
+  var snapBody=document.getElementById('eb').value;
+  var snapSim=prevSim;
+
+  var btn=document.getElementById('rwb'),sp=document.getElementById('rwsp');
+  btn.disabled=true;sp.style.display='block';
+  var tgt=document.getElementById('er').value.trim();
+  // Reuse the snapshot for the API payload (trimmed inline) — no second DOM read.
+  try{
+    var r=await fetch('/api/rewrite',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({target:tgt,subject:snapSub.trim(),content:snapBody.trim()})});
+    var d=await r.json();
+    // Update both fields fully before reading newSub/newBody below.
+    document.getElementById('eb').value=d.remediated_content;
+    if(d.remediated_subject){
+      document.getElementById('es').value=d.remediated_subject;
+    }
+    if(d.clean_preview){
+      // Label gauge as preview estimate before renderSim so the label is set correctly
+      var scanLbl=document.getElementById('rscore-lbl');
+      if(scanLbl)scanLbl.textContent='Preview Estimate';
+      renderSim(d.clean_preview);
+      shEstSim=d.clean_preview.simulation;
+      updateScoreHistory();
+    }
+    wfImproved=true;wfScanDirty=true;renderWfBar();
+    origSub=snapSub;origBody=snapBody;origSim=snapSim;
+    document.getElementById('restb').style.display='block';
+    // Read the rewritten values from DOM only AFTER both fields are fully updated.
+    var newSim=d.clean_preview?d.clean_preview.simulation:null;
+    var newSub=document.getElementById('es').value;
+    var newBody=document.getElementById('eb').value;
+    renderComparison(snapSim,snapSub,snapBody,newSim,newSub,newBody,d.changes||[]);
+    banner('Rewriter applied. Review changes and re-scan to confirm.','ok');
+  }catch(e){banner('Auto-improve failed: server unavailable.','err');}
+  finally{btn.disabled=false;sp.style.display='none';}
+}
+
+function doRestore(){
+  if(origSub===null&&origBody===null)return;
+  document.getElementById('es').value=origSub;
+  document.getElementById('eb').value=origBody;
+  origSub=null;origBody=null;origSim=null;
+  document.getElementById('restb').style.display='none';
+  clearComparison();
+  // Mark scan stale since body has been restored to pre-rewrite content
+  wfImproved=false;wfScanDirty=true;wfRescanned=false;
+  clearAnnotPreview();
+  renderWfBar();
+  // Do not auto-scan; let the user choose to re-evaluate the restored email.
+}
+
+function scorePillStyle(sim,el){
+  if(!el)return;
+  if(!sim||sim.risk_score==null){
+    el.removeAttribute('style');el.className='';
+    el.innerHTML='<span style="font-size:9px;color:var(--tx3)">Not available</span>';return;
+  }
+  var s=sim.risk_score;var bg,bd,tx;
+  if(s<10){bg='var(--safe-bg)';bd='var(--safe-bd)';tx='var(--safe-tx)';}
+  else if(s<25){bg='var(--low-bg)';bd='var(--low-bd)';tx='var(--low-tx)';}
+  else if(s<50){bg='var(--med-bg)';bd='var(--med-bd)';tx='var(--med-tx)';}
+  else if(s<80){bg='var(--hi-bg)';bd='var(--hi-bd)';tx='var(--hi-tx)';}
+  else{bg='var(--crit-bg)';bd='var(--crit-bd)';tx='var(--crit-tx)';}
+  el.className='cmp-score-pill';
+  el.style.cssText='background:'+bg+';border-color:'+bd+';color:'+tx;
+  el.textContent=s+'/100 \u00b7 '+fmtRisk(sim.risk_level);
+}
+
+function renderComparison(origSimSnap,oSub,oBody,newSimSnap,nSub,nBody,changes){
+  // Populate original side
+  document.getElementById('cmp-orig-sub').textContent=oSub||'(empty)';
+  document.getElementById('cmp-orig-body').textContent=oBody||'(empty)';
+  // Use scorePillStyle to update the pill span in-place (no outerHTML, no detach)
+  var origPillWrap=document.getElementById('cmp-orig-pill');
+  scorePillStyle(origSimSnap,origPillWrap);
+  // Populate rewritten side
+  document.getElementById('cmp-new-sub').textContent=nSub||'(empty)';
+  document.getElementById('cmp-new-body').textContent=nBody||'(empty)';
+  var newPillWrap=document.getElementById('cmp-new-pill');
+  scorePillStyle(newSimSnap,newPillWrap);
+  // Changes list
+  var chList=document.getElementById('cmp-ch-list');chList.innerHTML='';
+  if(changes&&changes.length>0){
+    changes.forEach(function(ch){
+      var d=document.createElement('div');d.className='cmp-ch-item';d.textContent=ch;chList.appendChild(d);
+    });
+  }else{
+    var nd=document.createElement('div');nd.className='cmp-ch-item';
+    nd.textContent='No specific changes reported.';chList.appendChild(nd);
+  }
+  // Risk delta
+  var delta=document.getElementById('cmp-delta');
+  if(origSimSnap&&origSimSnap.risk_score!=null&&newSimSnap&&newSimSnap.risk_score!=null){
+    var diff=newSimSnap.risk_score-origSimSnap.risk_score;
+    var absDiff=Math.abs(diff);
+    if(diff<0){
+      delta.className='cmp-delta better';
+      delta.textContent='Risk down '+absDiff+' pts';
+    }else if(diff>0){
+      delta.className='cmp-delta worse';
+      delta.textContent='Risk up '+diff+' pts';
+    }else{
+      delta.className='cmp-delta same';
+      delta.textContent='Risk unchanged';
+    }
+  }else{
+    delta.className='cmp-delta same';
+    delta.textContent='Score unavailable';
+  }
+  document.getElementById('cmpbox').style.display='block';
+}
+
+function clearComparison(){
+  document.getElementById('cmpbox').style.display='none';
+  document.getElementById('cmp-ch-list').innerHTML='';
+  document.getElementById('cmp-orig-sub').textContent='';
+  document.getElementById('cmp-orig-body').textContent='';
+  document.getElementById('cmp-new-sub').textContent='';
+  document.getElementById('cmp-new-body').textContent='';
+}
+
+// ---- WORKFLOW BAR ----
+function renderWfBar(){
+  var steps=['wf0','wf1','wf2','wf3','wf4','wf5'];
+  var hasTxt=document.getElementById('eb').value.trim().length>0||
+             document.getElementById('es').value.trim().length>0;
+  // Compute each step state
+  var confirmed=document.getElementById('ckb').checked&&prevId&&recipOk;
+  var states=[
+    hasTxt?'done':'current',                                              // Compose
+    wfScanned&&!wfScanDirty?'done':(wfScanDirty?'stale':'current'),      // Scan
+    wfScanned&&!wfScanDirty?'done':(wfScanDirty?'stale':''),             // Review
+    wfImproved?'done':'',                                                 // Improve
+    wfRescanned?'done':(wfImproved&&!wfRescanned?'current':''),          // Rescan
+    confirmed?'done':(wfRescanned||wfScanned?'current':''),              // Confirm
+  ];
+  // Find first non-done, non-empty step and make it current if not already set
+  var foundCurrent=false;
+  steps.forEach(function(id,i){
+    var el=document.getElementById(id);
+    if(!el)return;
+    var st=states[i];
+    if(!st&&!foundCurrent&&i>0){st='';}
+    el.className='wf-step'+(st?' '+st:'');
+    var dot=el.querySelector('.wf-dot');
+    if(dot){
+      if(st==='done'){dot.innerHTML='&#10003;';}
+      else{dot.textContent=i+1;}
+    }
+    if(st==='current')foundCurrent=true;
+  });
+}
+
+// ---- SCORE HISTORY ----
+function shPillHTML(sim,extraClass){
+  if(!sim||sim.risk_score==null)return '<span class="sh-pill'+( extraClass?' '+extraClass:'')+'">—</span>';
+  var s=sim.risk_score;var bg,bd,tx;
+  if(s<10){bg='var(--safe-bg)';bd='var(--safe-bd)';tx='var(--safe-tx)';}
+  else if(s<25){bg='var(--low-bg)';bd='var(--low-bd)';tx='var(--low-tx)';}
+  else if(s<50){bg='var(--med-bg)';bd='var(--med-bd)';tx='var(--med-tx)';}
+  else if(s<80){bg='var(--hi-bg)';bd='var(--hi-bd)';tx='var(--hi-tx)';}
+  else{bg='var(--crit-bg)';bd='var(--crit-bd)';tx='var(--crit-tx)';}
+  return '<span class="sh-pill'+(extraClass?' '+extraClass:'')+'" style="background:'+bg+';border-color:'+bd+';color:'+tx+'">'+s+'/100</span>';
+}
+
+function updateScoreHistory(){
+  var box=document.getElementById('score-hist');
+  var row=document.getElementById('sh-row');
+  if(!box||!row)return;
+  if(!shOrigSim&&!shEstSim&&!shRescanSim){box.style.display='none';return;}
+  var html='';
+  if(shOrigSim){
+    html+='<span class="sh-tag">Original scan</span>'+shPillHTML(shOrigSim,'');
+  }
+  if(shEstSim){
+    var diff=shOrigSim?shEstSim.risk_score-shOrigSim.risk_score:null;
+    html+='<span class="sh-arrow">&#8594;</span>';
+    html+='<span class="sh-tag">Preview est.</span>'+shPillHTML(shEstSim,'sh-est');
+    if(diff!==null){
+      var dc=diff<0?'better':(diff>0?'worse':'same');
+      var dl=diff<0?diff+' pts':(diff>0?'+'+diff+' pts':'same');
+      html+='<span class="sh-delta '+dc+'">'+dl+'</span>';
+    }
+  }
+  if(shRescanSim){
+    var refSim=shOrigSim||null;
+    var diff2=refSim?shRescanSim.risk_score-refSim.risk_score:null;
+    html+='<span class="sh-arrow">&#8594;</span>';
+    html+='<span class="sh-tag">Rescan</span>'+shPillHTML(shRescanSim,'');
+    if(diff2!==null){
+      var dc2=diff2<0?'better':(diff2>0?'worse':'same');
+      var dl2=diff2<0?'&#9660; '+Math.abs(diff2)+' pts':(diff2>0?'&#9650; '+diff2+' pts':'No change');
+      html+='<span class="sh-delta '+dc2+'">'+dl2+'</span>';
+    }
+  }
+  row.innerHTML=html;
+  box.style.display='block';
+}
+
+// ---- ANNOTATED PREVIEW ----
+// Extract the quoted matched phrase from a consequence detail string.
+// The predictor embeds matched text as ('...') in detail. Returns first match or null.
+function extractPhrase(detail){
+  if(!detail)return null;
+  var m=detail.match(/\\('([^']+)'\\)/);
+  if(m)return m[1];
+  // fallback: text after "contains " or "detected: " in quotes
+  var m2=detail.match(/["\u201c\u2018]([^"\u201d\u2019]{1,60})["\u201d\u2019]/);
+  if(m2)return m2[1];
+  return null;
+}
+
+function esc(str){return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function buildAnnotatedPreview(bodyText,consequences){
+  var wrap=document.getElementById('annot-wrap');
+  var annot=document.getElementById('annot-body');
+  var legend=document.getElementById('annot-legend');
+  if(!wrap||!annot)return;
+  if(!consequences||consequences.length===0){
+    wrap.style.display='none';
+    return;
+  }
+  // Build list of {phrase, severity, idx} for each finding that has a matched phrase
+  var marks=[];
+  consequences.forEach(function(c,i){
+    var phrase=extractPhrase(c.detail);
+    if(phrase)marks.push({phrase:phrase.toLowerCase(),orig:phrase,sev:c.severity,idx:i,summary:c.summary});
+  });
+  if(marks.length===0){
+    // No extractable phrases: still show the plain body so the panel is useful
+    annot.textContent=bodyText;
+    legend.innerHTML='';
+    wrap.style.display='block';
+    return;
+  }
+  // Build highlighted HTML. Walk body char by char, applying marks for matched phrases.
+  var lower=bodyText.toLowerCase();
+  var result='';
+  var i=0;
+  var len=bodyText.length;
+  // Build a sorted set of (start, end, markIdx) spans
+  var spans=[];
+  marks.forEach(function(m,mi){
+    var p=lower.indexOf(m.phrase);
+    while(p!==-1){
+      spans.push({s:p,e:p+m.phrase.length,mi:mi});
+      p=lower.indexOf(m.phrase,p+1);
+    }
+  });
+  // Sort by start, remove overlaps
+  spans.sort(function(a,b){return a.s-b.s;});
+  var filtered=[],last=-1;
+  spans.forEach(function(sp){
+    if(sp.s>=last){
+      filtered.push(sp);last=sp.e;
+    }
+  });
+  // Build HTML
+  var ci=0;
+  filtered.forEach(function(sp){
+    if(ci<sp.s)result+=esc(bodyText.slice(ci,sp.s));
+    var m=marks[sp.mi];
+    var cls=m.sev==='CRITICAL'?'hi-cr':(m.sev==='HIGH'?'hi-hi':'hi-md');
+    result+='<mark class="'+cls+'" tabindex="0" data-cidx="'+sp.mi+'" title="'+esc(m.summary)+'">'+esc(bodyText.slice(sp.s,sp.e))+'</mark>';
+    ci=sp.e;
+  });
+  if(ci<len)result+=esc(bodyText.slice(ci));
+  annot.innerHTML=result;
+  // Build legend
+  var sevSeen={};
+  marks.forEach(function(m){sevSeen[m.sev]=true;});
+  var lhtml='';
+  if(sevSeen['CRITICAL'])lhtml+='<span class="annot-key"><span class="annot-key-swatch" style="background:#f9d6d4;border:1.5px solid #b87068"></span>Critical</span>';
+  if(sevSeen['HIGH'])lhtml+='<span class="annot-key"><span class="annot-key-swatch" style="background:#f7e9de;border:1.5px solid #c0876a"></span>High</span>';
+  if(sevSeen['MEDIUM'])lhtml+='<span class="annot-key"><span class="annot-key-swatch" style="background:#f7f0de;border:1.5px solid #c9a55e"></span>Medium</span>';
+  legend.innerHTML=lhtml?'<span style="font-size:9px;color:var(--tx3);margin-right:.25rem">Legend:</span>'+lhtml:'';
+  wrap.style.display='block';
+}
+
+function focusAnnotMark(cidx){
+  var wrap=document.getElementById('annot-wrap');
+  if(!wrap||wrap.style.display==='none')return;
+  var mark=document.querySelector('#annot-body [data-cidx="'+cidx+'"]');
+  if(mark){
+    mark.scrollIntoView({behavior:'smooth',block:'nearest'});
+    mark.focus();
+  }
+}
+
+function clearAnnotPreview(){
+  var wrap=document.getElementById('annot-wrap');
+  if(wrap)wrap.style.display='none';
+  var annot=document.getElementById('annot-body');
+  if(annot)annot.innerHTML='';
+}
+
+// ---- DIRTY DETECTION ---- Mark scan stale when body or subject changes after a scan.
+function markFieldsDirty(){
+  if(wfScanned&&!wfScanDirty){
+    wfScanDirty=true;
+    renderWfBar();
+    // Hide annotated preview since body has changed
+    clearAnnotPreview();
+  }
+}
+
+async function doSend(){
+  if(!prevId){banner('Run a safety scan before sending.','err');return;}
+  var btn=document.getElementById('sendb'),sp=document.getElementById('sendsp'),dal=document.getElementById('dal');
+  btn.disabled=true;sp.style.display='block';dal.style.display='none';
+  var rec=document.getElementById('er').value.trim();
+  var sub=document.getElementById('es').value.trim();
+  var body=document.getElementById('eb').value.trim();
+  var ov=document.getElementById('ckb').checked;
+  try{
+    var r=await fetch('/api/send',{method:'POST',
+      headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({preview_id:prevId,recipient:rec,subject:sub,content:body,user_override:ov})});
+    var d=await r.json();
+    dal.style.display='block';
+    if(d.status==='SENT'){
+      dal.className='ok';
+      dal.innerHTML='<strong style="display:block;margin-bottom:.2rem">Email dispatched</strong><span class="mono" style="font-size:10px;opacity:.7">'+d.receipt_id+'</span><p style="margin-top:.3rem;font-size:10.5px">'+d.message+'</p>';
+      banner('Email dispatched with audit receipt.','ok');
+    }else{
+      dal.className='bad';
+      dal.innerHTML='<strong>Dispatch failed:</strong> '+(d.error||'Recipient rejected.');
+      banner('Send failed: '+(d.error||'Rejected'),'err');
+    }
+  }catch(e){
+    dal.style.display='block';dal.className='bad';
+    dal.textContent='Connection error. Ensure the Python server is running.';
+  }
+  finally{btn.disabled=false;sp.style.display='none';}
+}
+
+function toggleSend(){
+  var confirmed=document.getElementById('ckb').checked;
+  var btn=document.getElementById('sendb');
+  var can=confirmed&&prevId&&recipOk;
+  btn.disabled=!can;btn.classList.toggle('on',can);
+}
+
+async function loadCases(){
+  try{
+    var r=await fetch('/api/benchmark');
+    var d=await r.json();
+    cases=d.cases||[];renderCases(cases);
+  }catch(e){
+    document.getElementById('tcg').innerHTML='<div class="te" style="grid-column:1/-1">Could not load scenarios. Make sure the Python server is running.</div>';
+  }
+}
+
+function renderCases(cs){
+  var g=document.getElementById('tcg');g.innerHTML='';
+  var rk=0,sf=0;
+  cs.forEach(function(c){
+    var ri=c.expected_risky;
+    if(ri)rk++;else sf++;
+    var card=document.createElement('div');
+    card.className='sc '+(ri?'rk':'sf');
+    card.innerHTML='<div>'
+      +'<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:.4rem">'
+      +'<span class="sbg '+(ri?'rk':'sf')+'">'+(c.category||'')+'</span>'
+      +'<span class="sid">'+(c.id||'')+'</span></div>'
+      +'<div class="stl">'+(c.title||c.id)+'</div>'
+      +'<div class="sds">'+(c.description||'')+'</div></div>'
+      +'<button class="buse" onclick="useCase(\\''+(c.id)+'\\''+')" aria-label="Load: '+(c.title||c.id)+'">Load &amp; Test &rarr;</button>';
+    g.appendChild(card);
+  });
+  var rEl=document.getElementById('rcnt'),sEl=document.getElementById('scnt');
+  if(rEl)rEl.textContent=rk+' Risky';
+  if(sEl)sEl.textContent=sf+' Safe';
+}
+
+function useCase(id){
+  var c=cases.find(function(x){return x.id===id;});
+  if(!c)return;
+  document.getElementById('er').value=c.target||'colleague@gmail.com';
+  document.getElementById('es').value=c.subject||'';
+  document.getElementById('eb').value=c.content||'';
+  document.getElementById('dal').style.display='none';
+  // Clear any saved original and comparison so results from different emails never mix
+  origSub=null;origBody=null;origSim=null;
+  document.getElementById('restb').style.display='none';
+  clearComparison();
+  // Reset all workflow + score history state for the new scenario
+  wfScanned=false;wfScanDirty=false;wfImproved=false;wfRescanned=false;
+  shOrigSim=null;shEstSim=null;shRescanSim=null;
+  updateScoreHistory();
+  clearAnnotPreview();
+  var scanLbl=document.getElementById('rscore-lbl');
+  if(scanLbl)scanLbl.textContent='Risk Score';
+  renderWfBar();
+  verifyR();doScan();goSec('s2');
+}
+
+window.addEventListener('DOMContentLoaded',function(){
+  loadSender();loadCases();initAccordions();
+  // Initial workflow render
+  renderWfBar();
+  // Wire dirty detection on subject and body fields
+  var esEl=document.getElementById('es');
+  var ebEl=document.getElementById('eb');
+  if(esEl)esEl.addEventListener('input',function(){markFieldsDirty();renderWfBar();});
+  if(ebEl)ebEl.addEventListener('input',function(){markFieldsDirty();renderWfBar();});
+  // Wire confirm checkbox to workflow
+  var ckbEl=document.getElementById('ckb');
+  if(ckbEl)ckbEl.addEventListener('change',function(){renderWfBar();});
+});
+
+function initAccordions(){
+  document.querySelectorAll('.acc-item').forEach(function(item){
+    var btn=item.querySelector('.acc-trigger');
+    var panelId=btn.getAttribute('aria-controls');
+    var panel=document.getElementById(panelId);
+    // Hover: sync aria-expanded so screen readers track state
+    item.addEventListener('mouseenter',function(){
+      btn.setAttribute('aria-expanded','true');
+    });
+    item.addEventListener('mouseleave',function(){
+      // Only collapse aria if not keyboard-opened
+      if(!panel.classList.contains('open')){
+        btn.setAttribute('aria-expanded','false');
+      }
+    });
+    // Click: toggle keyboard-opened state (persists past mouseleave)
+    // Save & restore scrollY so class toggle never causes a page jump.
+    btn.addEventListener('click',function(e){
+      var sy=window.scrollY||window.pageYOffset;
+      panel.classList.toggle('open',!panel.classList.contains('open'));
+      btn.setAttribute('aria-expanded',panel.classList.contains('open')?'true':'false');
+      // Flush the style change, then snap scroll back to where it was.
+      requestAnimationFrame(function(){
+        if(window.scrollY!==sy){window.scrollTo({top:sy,behavior:'instant'});}
+      });
+    });
+    // Keyboard navigation between triggers
+    btn.addEventListener('keydown',function(e){
+      var items=Array.from(document.querySelectorAll('.acc-trigger'));
+      var idx=items.indexOf(btn);
+      if(e.key==='ArrowDown'){e.preventDefault();var n=items[idx+1];if(n)n.focus();}
+      else if(e.key==='ArrowUp'){e.preventDefault();var p=items[idx-1];if(p)p.focus();}
+      else if(e.key==='Home'){e.preventDefault();items[0].focus();}
+      else if(e.key==='End'){e.preventDefault();items[items.length-1].focus();}
+    });
+  });
+}
+</script>
+</body>
+</html>
+"""
+
+out = os.path.join(os.path.dirname(__file__), 'index.html')
+with open(out, 'w', encoding='utf-8') as f:
+    f.write(HEAD + BODY + SCRIPT)
+
+print(f"Written {os.path.getsize(out)} bytes to {out}")
